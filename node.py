@@ -2,11 +2,12 @@
 # Description: node objects for network.
 # ---------------------------------------------------------------------------------------
 import math
+import random
 from abc import ABC, abstractmethod
 from typing import Callable
 
 # Constants
-STRING = "Node {}"
+STRING = "{} {}"
 
 
 # Activation function
@@ -19,10 +20,13 @@ class BaseNode(ABC):
 	def __init__(self, number: int, activation: Callable[[float], float] = sigmoid):
 		self.number = number
 		self.activation = activation
-		self.__repr__ = self.__str__
+		self.name = self.__class__.__name__
 
 	def __str__(self):
-		return STRING.format(self.number)
+		return STRING.format(self.name, self.number)
+
+	def __repr__(self):
+		return str(self)
 
 	@abstractmethod
 	def get_output(self) -> float:
@@ -55,9 +59,9 @@ class InputNode(BaseNode):
 
 class HiddenNode(BaseNode):
 
-	def __init__(self, number: int, bias: float, activation: Callable[[float], float] = sigmoid):
+	def __init__(self, number: int, bias_range: float, activation: Callable[[float], float] = sigmoid):
 		super(HiddenNode, self).__init__(number, activation)
-		self.bias = bias
+		self.bias = random.random() * bias_range * 2 - bias_range
 		self.inputs = []
 		self.output = 0
 
