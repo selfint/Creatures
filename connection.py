@@ -9,6 +9,7 @@ from typing import Union
 # Constants
 STRING = "Connection {}: {} -> {}"
 
+
 class Connection:
 
 	def __init__(self, number: int, src_number: int, dst_number: int, weight_range: float, forward: bool = True,
@@ -27,6 +28,7 @@ class Connection:
 
 	def __repr__(self):
 		return str(self)
+
 
 if __name__ == '__main__':
 	c = Connection(0, 1, 2, True)

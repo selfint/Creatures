@@ -30,6 +30,7 @@ def dict_string(dictionary: dict):
 
 	return string
 
+
 if __name__ == '__main__':
 	a = {'a': 1, 'b': 2, 'c': [1, 2]}
 	print_dict(a)

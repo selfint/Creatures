@@ -6,7 +6,7 @@
 # TODO 9/21/18 Global: Implement crossover and mutation IN SIMULATION CLASS.
 # TODO 9/21/18 Global: Implement speciation IN SIMULATION CLASS.
 # TODO 9/21/18 Global: Slowly add more properties to environment.
-# TODO 9/21/18 Global: TRIBES.
+# TODO 9/21/18 Global: TRIBES!.
 # ---------------------------------------------------------------------------------------
 
 # Imports
