@@ -8,7 +8,7 @@ from typing import Callable, List
 
 # Constants
 STRING = "{} {} bias: {0:3f}"
-
+#
 
 # Activation function
 def sigmoid(x: float) -> float:
