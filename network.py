@@ -3,56 +3,77 @@
 # ---------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Set
 
 from connection import Connection
+from my_types import Node
 from node import *
-
-# Constants
 
 
 class Network:
 
-	def __init__(self, nodes: Dict[int, Union[InputNode, HiddenNode, OutputNode]],
-				 node_connections: Dict[Union[InputNode, HiddenNode, OutputNode], Dict[str, Tuple[Connection]]]):
-		self.nodes = nodes
-		self.node_connections = node_connections
-		self.inputs = [node for node in self.nodes.values() if type(node) is InputNode]
-		self.outputs = [node for node in self.nodes.values() if type(node) is OutputNode]
+    def __init__(self, nodes: Dict[int, Node],
+                 node_connections: Dict[Node, Dict[str, Tuple[Connection]]]):
+        self.nodes = nodes
+        self.node_connections = node_connections
+        self.inputs = [node for node in self.nodes.values() if type(node) is InputNode]
+        self.outputs = [node for node in self.nodes.values() if type(node) is OutputNode]
 
-	def get_output(self, inputs: List[float]) -> List[float]:
-		"""
-		Gets the output of the network. Evaluates a node's output recursively.
-		:param inputs: A list of floats for the network.
-		:return: A list of floats.
-		"""
-		for node in self.nodes.values():
-			node.reset_node()
+    def get_output(self, inputs: List[float]) -> List[float]:
+        """
+        Gets the output of the network. Evaluates a node's output recursively.
+        :param inputs: A list of floats for the network.
+        """
+        for node in self.nodes.values():
+            node.reset_node()
 
-		for i in range(len(inputs)):
-			self.inputs[i].set_input(inputs[i])
-		return [self.get_node_output(node) for node in self.outputs]
+        for i in range(len(inputs)):
+            self.inputs[i].set_input(inputs[i])
+        return [self.get_node_output(node) for node in self.outputs]
 
-	def get_node_output(self, node: Union[InputNode, HiddenNode, OutputNode]) -> float:
-		"""
-		Gets the recursive output of a node.
-		:param node: Node to get output of.
-		:return: Node's output value.
-		"""
+    def get_node_output(self, node: Node,
+                        prev_connections: Set[int]=None) -> float:
+        """
+        Gets the recursive output of a node.
+        :param node: Node to get output of.
+        :param prev_connections: All connections that have been calculated to avoid infinite loops.
+        :return: Node's output value.
+        """
 
-		# Get all nodes that add input into node.
-		input_connections = self.node_connections[node]['dst']
-		input_nodes = [self.nodes[input_connection.src_number] for input_connection in input_connections]
+        # Get all nodes that add input into node.
+        if prev_connections is None:
+            prev_connections = set()
+        input_connections = self.node_connections[node]['dst']
 
-		# Get all input node outputs
-		inputs = [self.get_node_output(input_node) for input_node in input_nodes]
+        # Check for calculated connections.
+        input_connections = [input_connection for input_connection in input_connections
+                             if input_connection.number not in prev_connections]
+        prev_connections.update(set(input_connection.number
+                              for input_connection in input_connections))
 
-		# Set node input
-		node.set_input(inputs)
-		output = node.get_output()
+        # Get each input nodes output and corresponding weight.
+        inputs = [self.get_node_output(self.nodes[input_connection.src_number], prev_connections)
+                  * input_connection.weight for input_connection in input_connections]
 
-		return output
+        # Set node input
+        node.set_input(inputs)
+        output = node.get_output()
+
+        return output
+
+    def get_node_connection(self, src: int, dst: int) -> Union[Connection, None]:
+        """
+        Finds a connection between two nodes, returns None if there isn't one.
+        """
+        out_connections = self.node_connections[self.nodes[src]]['dst']
+
+        # Get all connections outputting from the source node,
+        # and check if they output to the destination node,
+        for conn in out_connections:
+            if conn.dst_number == dst:
+                return conn
+        return None
 
 
 if __name__ == '__main__':
-	pass
+    pass

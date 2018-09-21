@@ -12,25 +12,38 @@ WEIGHT_RANGE = 2.0
 
 class Creature:
 
-	def __init__(self, inputs: int, outputs: int, name='Creature', weight_range=WEIGHT_RANGE):
-		self.inputs = inputs
-		self.outputs = outputs
-		self.name = name
+    def __init__(self, inputs: int = None, outputs: int = None, dna: Dna = None,
+                 name='Creature', weight_range=WEIGHT_RANGE):
 
-		self.weight_range = weight_range
+        # Take dna inputs & outputs if dna is given, else take values.
+        self.inputs = dna.inputs if dna is not None else inputs
+        self.outputs = dna.outputs if dna is not None else outputs
+        self.name = name
 
-		self.dna = Dna(self.inputs, self.outputs, self.weight_range)
-		self.network = Network(self.dna.nodes, self.dna.node_connections)
+        self.weight_range = weight_range
 
-	def think(self, inputs: List[float]) -> List[float]:
-		"""
-		Gets the creature decision based on the inputs it was given.
-		:param inputs: Sensory input.
-		:return: Creature decision.
-		"""
-		return self.network.get_output(inputs)
+        self.dna = dna if dna is not None else Dna(self.inputs, self.outputs, self.weight_range)
+        self.network = Network(self.dna.nodes, self.dna.node_connections)
+
+    def think(self, inputs: List[float]) -> List[float]:
+        """
+        Gets the creature decision based on the inputs it was given.
+        :param inputs: Sensory input.
+        :return: Creature decision.
+        """
+        return self.network.get_output(inputs)
 
 if __name__ == '__main__':
-	c = Creature(20, 3)
-	print(c.network.get_output([1 for _ in range(c.inputs)]))
-	print(c.network.get_output([0 for _ in range(c.inputs)]))
+    from node import *
+    from connection import Connection
+    nodes = {0: InputNode(0),
+             1: HiddenNode(1, 2),
+             2: OutputNode(2, 2)}
+    connections = {0: Connection(number=0, src_number=0, dst_number=1, weight_range=2),
+                   1: Connection(1, 1, 2, 2),
+                   2: Connection(2, 2, 1, 2)}
+    dna = Dna(2, 1, 2, nodes, connections)
+    c = Creature(dna=dna)
+    print(c.think([1]))
+    print(c.think([0]))
+    print(c.dna)

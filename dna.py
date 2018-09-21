@@ -4,6 +4,7 @@
 
 # Imports
 from typing import Dict, Tuple, Union
+from my_types import Node
 
 from connection import Connection
 from functions import dict_string
@@ -12,26 +13,27 @@ from node import *
 # Constants
 FULL_STRING = """
 Dna
---- Input  Nodes ---
-{}
-
---- Hidden Nodes ---
-{}
-
---- Output Nodes ---
-{}
+Input  Nodes: {}
+Hidden Nodes: {}
+Output Nodes: {}
 
 ---  Connections ---
 {}
+--------------------
 """
 
 
 class Dna:
 
-    def __init__(self, inputs: int, outputs: int, weight_range: float, nodes: Dict[
-        int, Union[InputNode, HiddenNode, OutputNode]] = None, connections: Dict[int, Connection] = None):
-        self.inputs = inputs
-        self.outputs = outputs
+    def __init__(self, inputs: int = None, outputs: int = None, weight_range: float = 2.0,
+                 nodes: Dict[int, Node] = None,
+                 connections: Dict[int, Connection] = None):
+
+        # Take input & output node amount if given, else take values.
+        self.inputs = len([node for node in nodes if type(node) is InputNode]) \
+            if nodes else inputs
+        self.outputs = len([node for node in nodes if type(node) is OutputNode]) \
+            if nodes else outputs
         self.weight_range = self.bias_range = weight_range
 
         # Generate nodes if not given any.
@@ -50,10 +52,10 @@ class Dna:
     def __repr__(self):
         return str(self)
 
-    def generate_nodes(self) -> Dict[int, Union[InputNode, HiddenNode, OutputNode]]:
+    def generate_nodes(self) -> Dict[int, Node]:
         """
-		Generates input and output nodes.
-		"""
+        Generates input and output nodes.
+        """
 
         nodes = []
         for n in range(self.inputs):
@@ -63,17 +65,17 @@ class Dna:
 
         return {node.number: node for node in nodes}
 
-    def get_node_by_type(self, node_type: type) -> Tuple[Union[InputNode, HiddenNode, OutputNode]]:
+    def get_node_by_type(self, node_type: type) -> Tuple[Node]:
         """
-		Finds all nodes of type node_type.
-		"""
+        Finds all nodes of type node_type.
+        """
         return tuple(node for node in self.nodes.values() if type(node) is node_type)
 
     def connect_nodes(self) -> Dict[int, Connection]:
         """
-		Fully connects all input nodes to output nodes.
-		:return: Dict of indexes corresponding with connections.
-		"""
+        Fully connects all input nodes to output nodes.
+        :return: Dict of indexes corresponding with connections.
+        """
 
         connections = []
         for src in self.input_nodes:
@@ -82,11 +84,11 @@ class Dna:
 
         return {connection.number: connection for connection in connections}
 
-    def get_node_connections(self, node: Union[InputNode, HiddenNode, OutputNode]) -> Dict[str, Tuple[Connection]]:
+    def get_node_connections(self, node: Node) -> Dict[str, Tuple[Connection]]:
         """
-		Returns all connections from node and into node (src, dst).
-		:param node: Node object.
-		"""
+        Returns all connections from node and into node (src, dst).
+        :param node: Node object.
+        """
         src = tuple(connection for connection in self.connections.values() if connection.src_number == node.number)
         dst = tuple(connection for connection in self.connections.values() if connection.dst_number == node.number)
 
