@@ -42,7 +42,7 @@ if __name__ == '__main__':
     connections = {0: Connection(number=0, src_number=0, dst_number=1, weight_range=2),
                    1: Connection(1, 1, 2, 2),
                    2: Connection(2, 2, 1, 2)}
-    dna = Dna(2, 1, 2, nodes, connections)
+    dna = Dna(inputs=2, outputs=1, weight_range=2, nodes=nodes, connections=connections)
     c = Creature(dna=dna)
     print(c.think([1]))
     print(c.think([0]))
