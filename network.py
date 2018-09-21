@@ -2,12 +2,11 @@
 # Description: network object for creature.
 # ---------------------------------------------------------------------------------------
 
-from typing import Dict, List, Union, Tuple
-
 # Imports
+from typing import Dict, Tuple, Union
+
 from connection import Connection
 from node import *
-
 
 # Constants
 

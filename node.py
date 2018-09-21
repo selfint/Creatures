@@ -1,6 +1,8 @@
 # node.py
 # Description: node objects for network.
 # ---------------------------------------------------------------------------------------
+
+# Imports
 import math
 import random
 from abc import ABC, abstractmethod
@@ -8,7 +10,7 @@ from typing import Callable, List
 
 # Constants
 STRING = "{} {} bias: {0:3f}"
-#
+
 
 # Activation function
 def sigmoid(x: float) -> float:

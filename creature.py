@@ -3,12 +3,12 @@
 # ---------------------------------------------------------------------------------------
 
 # Imports
+from dna import Dna, List
 from network import Network
-from dna import Dna
-
 
 # Constants
 WEIGHT_RANGE = 2.0
+
 
 class Creature:
 
@@ -22,7 +22,13 @@ class Creature:
 		self.dna = Dna(self.inputs, self.outputs, self.weight_range)
 		self.network = Network(self.dna.nodes, self.dna.node_connections)
 
-
+	def think(self, inputs: List[float]) -> List[float]:
+		"""
+		Gets the creature decision based on the inputs it was given.
+		:param inputs: Sensory input.
+		:return: Creature decision.
+		"""
+		return self.network.get_output(inputs)
 
 if __name__ == '__main__':
 	c = Creature(20, 3)
