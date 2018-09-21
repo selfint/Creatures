@@ -4,10 +4,10 @@
 import math
 import random
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, List
 
 # Constants
-STRING = "{} {}"
+STRING = "{} {} bias: {0:3f}"
 
 
 # Activation function
@@ -22,8 +22,11 @@ class BaseNode(ABC):
 		self.activation = activation
 		self.name = self.__class__.__name__
 
+		self.output = self.inputs = None
+		self.bias = None
+
 	def __str__(self):
-		return STRING.format(self.name, self.number)
+		return STRING.format(self.name, self.number, self.bias)
 
 	def __repr__(self):
 		return str(self)
@@ -33,7 +36,7 @@ class BaseNode(ABC):
 		pass
 
 	@abstractmethod
-	def add_input(self, input_value: float) -> None:
+	def set_input(self, input_value: float) -> None:
 		pass
 
 	@abstractmethod
@@ -45,16 +48,18 @@ class InputNode(BaseNode):
 
 	def __init__(self, number: int, activation: Callable[[float], float] = sigmoid):
 		super(InputNode, self).__init__(number, activation)
-		self.output = self.inputs = 0
 
 	def get_output(self) -> float:
 		return self.output
 
-	def add_input(self, input_value: float) -> None:
-		self.inputs = self.output = input_value
+	def set_input(self, input_value: float) -> None:
+		"""
+		Sets the nodes input only if the input has not been set. To change an inputs node input, you must reset it.
+		"""
+		self.inputs = self.output = input_value if self.inputs is None else self.inputs
 
 	def reset_node(self) -> None:
-		self.inputs = self.output = 0
+		self.inputs = self.output = None
 
 
 class HiddenNode(BaseNode):
@@ -69,8 +74,8 @@ class HiddenNode(BaseNode):
 		self.output = self.activation(sum(self.inputs)) + self.bias
 		return self.output
 
-	def add_input(self, input_value: float) -> None:
-		self.inputs.append(input_value)
+	def set_input(self, input_value: List[float]) -> None:
+		self.inputs = input_value
 
 	def reset_node(self) -> None:
 		self.inputs = []
@@ -87,16 +92,16 @@ class OutputNode(HiddenNode):
 
 if __name__ == '__main__':
 	inn = InputNode(0)
-	hid = HiddenNode(1, 0)
-	out = OutputNode(2, 0)
+	hid = HiddenNode(1, 3)
+	out = OutputNode(2, 2)
 
 	print(inn, hid, out)
 
-	inn.add_input(432)
+	inn.set_input(432)
 	print("inn output:", inn.get_output())
 
-	hid.add_input(inn.get_output())
+	hid.set_input([inn.get_output()])
 	print("hid output:", hid.get_output())
 
-	out.add_input(hid.get_output())
+	out.set_input([hid.get_output()])
 	print("out output:", out.get_output())
