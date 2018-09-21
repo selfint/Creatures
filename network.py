@@ -16,20 +16,20 @@ class Network:
                  node_connections: Dict[Node, Dict[str, Tuple[Connection]]]):
         self.nodes = nodes
         self.node_connections = node_connections
-        self.inputs = [node for node in self.nodes.values() if type(node) is InputNode]
-        self.outputs = [node for node in self.nodes.values() if type(node) is OutputNode]
+        self.input_nodes = [node for node in self.nodes.values() if type(node) is InputNode]
+        self.output_nodes = [node for node in self.nodes.values() if type(node) is OutputNode]
 
-    def get_output(self, inputs: List[float]) -> List[float]:
+    def get_output(self, network_inputs: List[float]) -> List[float]:
         """
         Gets the output of the network. Evaluates a node's output recursively.
-        :param inputs: A list of floats for the network.
+        :param network_inputs: A list of floats for the network.
         """
         for node in self.nodes.values():
             node.reset_node()
 
-        for i in range(len(inputs)):
-            self.inputs[i].set_input(inputs[i])
-        return [self.get_node_output(node) for node in self.outputs]
+        for node, value in zip(self.input_nodes, network_inputs):
+           node.set_input(value)
+        return [self.get_node_output(node) for node in self.output_nodes]
 
     def get_node_output(self, node: Node,
                         prev_connections: Set[int]=None) -> float:
@@ -41,8 +41,7 @@ class Network:
         """
 
         # Get all nodes that add input into node.
-        if prev_connections is None:
-            prev_connections = set()
+        prev_connections = prev_connections or set()
         input_connections = self.node_connections[node]['dst']
 
         # Check for calculated connections.

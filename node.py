@@ -23,8 +23,7 @@ class BaseNode(ABC):
         self.number = number
         self.activation = activation
         self.name = self.__class__.__name__
-
-        self.output = self.inputs = None
+        self.reset_node()
         self.bias = None
 
     def __str__(self):
@@ -42,15 +41,15 @@ class BaseNode(ABC):
     def set_input(self, input_value: float) -> None:
         pass
 
-    @abstractmethod
     def reset_node(self) -> None:
-        pass
+        self.inputs = self.output = None
 
 
 class InputNode(BaseNode):
 
     def __init__(self, number: int, activation: Callable[[float], float] = sigmoid):
         super(InputNode, self).__init__(number, activation)
+        self.reset_node()
 
     def get_output(self) -> float:
         return self.output
@@ -61,28 +60,20 @@ class InputNode(BaseNode):
         """
         self.inputs = self.output = input_value if self.inputs is None else self.inputs
 
-    def reset_node(self) -> None:
-        self.inputs = self.output = None
-
 
 class HiddenNode(BaseNode):
 
     def __init__(self, number: int, bias_range: float, activation: Callable[[float], float] = sigmoid):
         super(HiddenNode, self).__init__(number, activation)
         self.bias = random.random() * bias_range * 2 - bias_range
-        self.inputs = None
-        self.output = 0
+        self.reset_node()
 
     def get_output(self) -> float:
         self.output = self.activation(sum(self.inputs)) + self.bias
         return self.output
 
     def set_input(self, input_value: List[float]) -> None:
-        self.inputs = input_value if self.inputs is None else self.inputs
-
-    def reset_node(self) -> None:
-        self.inputs = []
-        self.output = 0
+        self.inputs = input_value
 
 
 class OutputNode(HiddenNode):
@@ -92,6 +83,7 @@ class OutputNode(HiddenNode):
 
     def __init__(self, number: int, bias: float, activation: Callable[[float], float] = sigmoid):
         super(OutputNode, self).__init__(number, bias, activation)
+
 
 if __name__ == '__main__':
     inn = InputNode(0)

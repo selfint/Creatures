@@ -46,4 +46,3 @@ if __name__ == '__main__':
     c = Creature(dna=dna)
     print(c.think([1]))
     print(c.think([0]))
-    print(c.dna)
