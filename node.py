@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Callable, List
 
 # Constants
-STRING = "{} {} bias: {0:3f}"
+STRING = "{} {} bias: {:.3f}"
 
 
 # Activation function
@@ -28,7 +28,8 @@ class BaseNode(ABC):
 		self.bias = None
 
 	def __str__(self):
-		return STRING.format(self.name, self.number, self.bias)
+		return STRING.format(self.name, self.number,
+							 self.bias if self.bias else 0)
 
 	def __repr__(self):
 		return str(self)
