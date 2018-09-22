@@ -1,10 +1,11 @@
 # creature.py
 # Description: creature object.
-# ---------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
 from dna import Dna, List
 from network import Network
+from my_types import COLOR, Info
 
 # Constants
 WEIGHT_RANGE = 2.0
@@ -12,8 +13,8 @@ WEIGHT_RANGE = 2.0
 
 class Creature:
 
-    def __init__(self, inputs: int = None, outputs: int = None, dna: Dna = None,
-                 name='Creature', weight_range=WEIGHT_RANGE):
+    def __init__(self, inputs: int = None, outputs: int = None, colors: List[COLOR] = None, dna: Dna = None,
+                 name='Creature', weight_range: float = WEIGHT_RANGE, info: Info = None):
 
         # Take dna inputs & outputs if dna is given, else take values.
         self.inputs = dna.inputs if dna is not None else inputs
@@ -24,6 +25,16 @@ class Creature:
 
         self.dna = dna if dna is not None else Dna(self.inputs, self.outputs, self.weight_range)
         self.network = Network(self.dna.nodes, self.dna.node_connections)
+
+        # Outline how to draw the shape.
+        # For example body = [[(0, 0, 100, 100)], [(0, 100, 20, 20)]]
+        # The first list is all ellipses with the PRIMARY color, [(0, 0, 100, 100)].
+        # The second list is all ellipses with the SECONDARY color, [(0, 100, 20, 20)]. And so on and so forth.
+        if colors is None:
+            colors = list()
+        self.info = info
+        self.colors = colors
+        self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
 
     def think(self, inputs: List[float]) -> List[float]:
         """
