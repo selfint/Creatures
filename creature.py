@@ -14,7 +14,7 @@ WEIGHT_RANGE = 2.0
 class Creature:
 
     def __init__(self, inputs: int = None, outputs: int = None, colors: List[COLOR] = None, dna: Dna = None,
-                 name='Creature', weight_range: float = WEIGHT_RANGE, info: Info = None):
+                 name='Creature', weight_range: float = WEIGHT_RANGE):
 
         # Take dna inputs & outputs if dna is given, else take values.
         self.inputs = dna.inputs if dna is not None else inputs
@@ -32,7 +32,6 @@ class Creature:
         # The second list is all ellipses with the SECONDARY color, [(0, 100, 20, 20)]. And so on and so forth.
         if colors is None:
             colors = list()
-        self.info = info
         self.colors = colors
         self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
 
