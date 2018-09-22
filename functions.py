@@ -21,7 +21,6 @@ def dict_string(dictionary: dict):
     for key, value in dictionary.items():
         string += str(key) + ': '
         try:
-            temp = iter(value)
             for x in value.items():
                 string += '\n\t' + str(x)
         except TypeError:

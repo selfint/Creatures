@@ -46,7 +46,7 @@ class Dna:
         self.node_connections = {node: self.get_node_connections(node) for node in self.nodes.values()}
 
     def __str__(self):
-        return FULL_STRING.format(self.input_nodes, self.get_node_by_type(HiddenNode), self.output_nodes,
+        return FULL_STRING.format(len(self.input_nodes), len(self.get_node_by_type(HiddenNode)), len(self.output_nodes),
                                   dict_string(self.node_connections))
 
     def __repr__(self):
