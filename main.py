@@ -12,7 +12,7 @@ from pygame import gfxdraw
 
 # Constants
 from creature import Creature
-from my_types import COLOR, Info
+from my_types import COLOR, GraphicInfo, CreatureInfo
 
 HEIGHT = 600
 WIDTH = 800
@@ -68,26 +68,25 @@ def draw_creature(screen: object, creature: Creature, x: float, y: float, scale:
                     shape_color)
 
 
-def draw_object(screen: object, thing: Union[Creature]) -> None:
+def draw_object(screen: object, thing: Union[Creature], x:float, y:float, scale:float) -> None:
     """
     Calls the appropriate function based on the object type. Assumes the object has Info tuple
     """
 
-    if type(thing) is Creature:
-        # noinspection PyTypeChecker
-        draw_creature(screen, thing, *thing.info)
+    if isinstance(thing, Creature):
+        draw_creature(screen, thing, x, y, scale)
 
 
 class Simulation:
 
     def __init__(self, population_size: int, creature_inputs: int, creature_outputs: int):
         self.population_size = population_size
-        self.population = {Creature(creature_inputs, creature_outputs,
-                                    weight_range=WEIGHT_RANGE, colors=[BLUE], info=Info(100, 100, 1)): Info(100, 100, 1)
-                           for _ in range(population_size)}
-
-        # Pygame will render everything in this list.
-        self.objects = self.population
+        self.population = dict()
+        self.graphics = dict()
+        for _ in range(population_size):
+            creature = Creature(creature_inputs, creature_outputs, weight_range=WEIGHT_RANGE, colors=[BLUE, RED])
+            self.population[creature] = CreatureInfo()
+            self.graphics[creature] = GraphicInfo(300, 200, 0.2)
 
     def update(self) -> None:
         """
@@ -108,8 +107,8 @@ if __name__ == '__main__':
                 run = False
         screen.fill(BACKGROUND)
         simulation.update()
-        for obj in simulation.objects:
-            draw_object(screen, obj)
+        for obj in simulation.graphics:
+            draw_object(screen, obj, *simulation.graphics[obj])
         pygame.display.update()
         clock.tick()
     sys.exit(1)

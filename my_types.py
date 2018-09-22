@@ -8,5 +8,6 @@ from node import InputNode, HiddenNode, OutputNode
 
 Node = Union[InputNode,HiddenNode,OutputNode]
 COLOR = Tuple[float, float, float]
-Info = collections.namedtuple('Info', 'x y scale')
+GraphicInfo = collections.namedtuple('GraphicInfo', 'x y scale')
+CreatureInfo = collections.namedtuple('CreatureInfo', '')
 

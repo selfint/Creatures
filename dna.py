@@ -30,9 +30,9 @@ class Dna:
                  connections: Dict[int, Connection] = None):
 
         # Take input & output node amount if given, else take values.
-        self.inputs = len([node for node in nodes if type(node) is InputNode]) \
+        self.inputs = len([node for node in nodes if isinstance(node, InputNode)]) \
             if nodes else inputs
-        self.outputs = len([node for node in nodes if type(node) is OutputNode]) \
+        self.outputs = len([node for node in nodes if isinstance(node, OutputNode)]) \
             if nodes else outputs
         self.weight_range = self.bias_range = weight_range
 
