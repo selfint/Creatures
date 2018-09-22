@@ -6,7 +6,7 @@
 from typing import Dict, Tuple, Union, Set
 
 from connection import Connection
-from my_types import Node
+from constants import Node
 from node import *
 
 

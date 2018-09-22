@@ -5,7 +5,7 @@
 # Imports
 from dna import Dna, List
 from network import Network
-from my_types import COLOR, GraphicInfo
+from constants import COLOR
 
 # Constants
 WEIGHT_RANGE = 2.0

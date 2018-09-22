@@ -10,8 +10,12 @@ from simulation import Simulation
 HEIGHT = 600
 WIDTH = 800
 CAPTION = 'Creatures'
+POPULATION_SIZE = 2
+CREATURE_INPUTS = 2
+CREATURE_OUTPUTS = 4
+
 
 if __name__ == '__main__':
-    s = Simulation(1, 2, 1)
-    g = Graphics(s, width=WIDTH, height=HEIGHT, caption=CAPTION)
-    g.run()
+    simulation = Simulation(POPULATION_SIZE, CREATURE_INPUTS, CREATURE_OUTPUTS)
+    graphics = Graphics(simulation, WIDTH, HEIGHT, CAPTION)
+    graphics.run()

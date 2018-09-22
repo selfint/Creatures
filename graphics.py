@@ -14,7 +14,7 @@ from simulation import Simulation
 
 
 # Constants
-from my_types import COLOR
+from constants import COLOR
 
 CAPTION = 'Creatures'
 
@@ -108,7 +108,8 @@ class Graphics:
             self.screen.fill(BACKGROUND)
             self.simulation.update()
             for obj in self.simulation.world_info:
-                draw_object(self.screen, obj, *self.simulation.world_info[obj])
+                object_info = self.simulation.world_info[obj]
+                draw_object(self.screen, obj, object_info.x, object_info.y, object_info.scale)
             pygame.display.update()
             self.clock.tick()
         sys.exit(1)

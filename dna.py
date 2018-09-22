@@ -4,7 +4,7 @@
 
 # Imports
 from typing import Dict, Tuple, Union
-from my_types import Node
+from constants import Node
 
 from connection import Connection
 from functions import dict_string
