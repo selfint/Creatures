@@ -81,11 +81,10 @@ class Simulation:
     def __init__(self, population_size: int, creature_inputs: int, creature_outputs: int):
         self.population_size = population_size
         self.population = dict()
-        self.graphics = dict()
         for _ in range(population_size):
             creature = Creature(creature_inputs, creature_outputs, weight_range=WEIGHT_RANGE, colors=[BLUE, RED])
-            self.population[creature] = CreatureInfo()
-            self.graphics[creature] = GraphicInfo(300, 200, 0.2)
+            self.population[creature] = CreatureInfo(300, 200, 0.2)
+        self.world_info = self.population
 
     def update(self) -> None:
         """

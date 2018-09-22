@@ -107,8 +107,8 @@ class Graphics:
                     run = False
             self.screen.fill(BACKGROUND)
             self.simulation.update()
-            for obj in self.simulation.graphics:
-                draw_object(self.screen, obj, *self.simulation.graphics[obj])
+            for obj in self.simulation.world_info:
+                draw_object(self.screen, obj, *self.simulation.world_info[obj])
             pygame.display.update()
             self.clock.tick()
         sys.exit(1)
