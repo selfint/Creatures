@@ -10,7 +10,7 @@ import pygame
 from pygame import gfxdraw
 
 # Constants
-from constants import COLOR, CreatureInfo, CREATURE_COLORS
+from constants import COLOR, CreatureInfo, CREATURE_COLORS, CreatureNetworkInput
 from creature import Creature
 
 HEIGHT = 600
@@ -82,24 +82,46 @@ class Simulation:
                  width: int = WIDTH, height: int = HEIGHT):
         self.population_size = population_size
         self.population = dict()
-        self.width = width
-        self.height = height
+        self.world_width = width
+        self.world_height = height
         for i in range(population_size):
             primary = choice(list(CREATURE_COLORS.values()))
             secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
             creature = Creature(creature_inputs, creature_outputs,
                                 colors=[primary, secondary], weight_range=WEIGHT_RANGE, name=str(i))
-            self.population[creature] = CreatureInfo(randint(0, self.width), randint(0, self.height), 0.2)
+            self.population[creature] = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
         self.world_info = self.population
 
     def update(self) -> None:
         """
         Runs a single frame of the simulation.
         """
-        # for creature, creature_info in self.population:
-        #     for other, other_info in self.world_info:
-        #         creature_decision = creature.think()
+        for creature, creature_info in self.population.items():
+            creature_decisions = []
+            for other, other_info in self.world_info.items():
+                creature_decision = creature.think(self.info_to_vec(creature_info, other_info))
+                creature_decisions.append(creature_decision)
+            print(creature_decisions)
+
+    def info_to_vec(self, creature_info: CreatureInfo, other_info: CreatureInfo) -> CreatureNetworkInput:
+        """
+        Meaningfully convert CreatureInfo of a target creature to a vector,
+        based on the creature info of the source creature.
+        :param creature_info: Source creature (creature LOOKING).
+        :param other_info: Destination creature (creature SEEN).
+        :return: Network input for creature LOOKING at creature SEEN.
+        """
+
+        # Calculate dx and dy.
+        dx = (creature_info.x - other_info.x) / self.world_width
+        dy = (creature_info.y - other_info.y) / self.world_height
+
+        # Build network input.
+        network_input = CreatureNetworkInput(dx, dy)
+        return network_input
 
 
 if __name__ == '__main__':
-    s = Simulation(1, 1, 1)
+    s = Simulation(2, 2, 4)
+    c1, c2 = s.population.values()
+    s.info_to_vec(c1, c2)

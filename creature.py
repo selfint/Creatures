@@ -5,7 +5,7 @@
 # Imports
 from dna import Dna, List
 from network import Network
-from constants import COLOR
+from constants import COLOR, CreatureNetworkInput
 
 # Constants
 WEIGHT_RANGE = 2.0
@@ -35,7 +35,7 @@ class Creature:
         self.colors = colors
         self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
 
-    def think(self, inputs: List[float]) -> List[float]:
+    def think(self, inputs: CreatureNetworkInput) -> List[float]:
         """
         Gets the creature decision based on the inputs it was given.
         :param inputs: Sensory input.
