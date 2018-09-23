@@ -6,7 +6,7 @@
 from typing import List
 
 # Constants
-from Constants.data_structures import CreatureNetworkInput
+from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import WEIGHT_RANGE
 from Constants.types import COLOR
 # Objects
@@ -23,7 +23,6 @@ class Creature:
         self.inputs = dna.inputs if dna is not None else inputs
         self.outputs = dna.outputs if dna is not None else outputs
         self.name = name
-
         self.weight_range = weight_range
 
         self.dna = dna if dna is not None else Dna(self.inputs, self.outputs, self.weight_range)
@@ -38,13 +37,13 @@ class Creature:
         self.colors = colors
         self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
 
-    def think(self, inputs: CreatureNetworkInput) -> List[float]:
+    def think(self, inputs: CreatureNetworkInput) -> CreatureNetworkOutput:
         """
         Gets the creature decision based on the inputs it was given.
         :param inputs: Sensory input.
         :return: Creature decision.
         """
-        return self.network.get_output(inputs)
+        return CreatureNetworkOutput(*self.network.get_output(list(inputs)))
 
 if __name__ == '__main__':
     from node import *

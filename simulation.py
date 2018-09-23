@@ -64,7 +64,7 @@ class Simulation:
         info = self.population[creature]
         for attr in self.creature_actions:
             creature_attr, action_attr = getattr(info, attr), getattr(creature_actions, attr)
-            setattr(self.population[creature], attr, creature_attr + action_attr)
+            setattr(info, attr, creature_attr + action_attr)
 
     def interpret_decisions(self, decisions: List[CreatureNetworkOutput]) -> CreatureActions:
         """
@@ -115,6 +115,27 @@ class Simulation:
         for creature_info in self.population.values():
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
+
+    def weight_mutation(self, creature: Creature):
+        """
+        Return a weight mutation object from the creature. A weight mutation has no number, the object is here
+        for organization purposes.
+        """
+
+    def connection_mutation(self, creature: Creature):
+        """
+        Returns a new old_connection mutation based on the creature.
+        """
+
+    def node_mutation(self, creature: Creature):
+        """
+        Returns a new node mutation based on the creature.
+        """
+
+    def mutate(self, creature: Creature):
+        """
+        Get mutations based on the creature, based on random chance and neat_parameter values.
+        """
 
 if __name__ == '__main__':
     s = Simulation(2, 2, 4)

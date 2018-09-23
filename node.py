@@ -6,7 +6,7 @@
 import math
 import random
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Callable, List, Union
 
 # Constants
 from Constants.constants import NODE_STRING
@@ -63,7 +63,7 @@ class InputNode(BaseNode):
 
 class HiddenNode(BaseNode):
 
-    def __init__(self, number: int, bias_range: float, activation: Callable[[float], float] = sigmoid):
+    def __init__(self, number: Union[int, None], bias_range: float, activation: Callable[[float], float] = sigmoid):
         super(HiddenNode, self).__init__(number, activation)
         self.bias = random.random() * bias_range * 2 - bias_range
         self.reset_node()

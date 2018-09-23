@@ -1,4 +1,4 @@
-# constants.py
+    # constants.py
 # Description: constants.
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -19,8 +19,8 @@ NODE_STRING = "{} {} bias: {:.3f}"
 # Graphics.
 CAPTION = 'Creatures'
 WIDTH, HEIGHT = 800, 600
-SPEED_SCALING = 0.01
-CREATURE_COLORS = {  # Will be used to differentiate between species.
+SPEED_SCALING = 0.1
+CREATURE_COLORS = {  # Will be used to visually differentiate between species.
     'RED' : (255, 0, 0),
     'GREEN' : (0, 255, 0),
     'BLUE' : (0, 0, 255),

@@ -64,7 +64,7 @@ class Network:
 
     def get_node_connection(self, src: int, dst: int) -> Union[Connection, None]:
         """
-        Finds a connection between two nodes, returns None if there isn't one.
+        Finds a old_connection between two nodes, returns None if there isn't one.
         """
         out_connections = self.node_connections[self.nodes[src]]['dst']
 
