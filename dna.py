@@ -3,30 +3,19 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Union, Type
-from constants import Node
+from typing import Dict, Tuple, Type
 
 from connection import Connection
 from functions import dict_string
-from node import *
-
-# Constants
-FULL_STRING = """
-Dna
-Input  Nodes: {}
-Hidden Nodes: {}
-Output Nodes: {}
-
----  Connections ---
-{}
---------------------
-"""
+from Constants.constants import DNA_STRING
+from Constants.types import NodeObject
+from node import InputNode, HiddenNode, OutputNode
 
 
 class Dna:
 
     def __init__(self, inputs: int = None, outputs: int = None, weight_range: float = 2.0,
-                 nodes: Dict[int, Node] = None,
+                 nodes: Dict[int, NodeObject] = None,
                  connections: Dict[int, Connection] = None):
 
         # Take input & output node amount if given, else take values.
@@ -46,13 +35,13 @@ class Dna:
         self.node_connections = {node: self.get_node_connections(node) for node in self.nodes.values()}
 
     def __str__(self):
-        return FULL_STRING.format(len(self.input_nodes), len(self.get_node_by_type(HiddenNode)), len(self.output_nodes),
+        return DNA_STRING.format(len(self.input_nodes), len(self.get_node_by_type(HiddenNode)), len(self.output_nodes),
                                   dict_string(self.node_connections))
 
     def __repr__(self):
         return str(self)
 
-    def generate_nodes(self) -> Dict[int, Node]:
+    def generate_nodes(self) -> Dict[int, NodeObject]:
         """
         Generates input and output nodes.
         """
@@ -65,7 +54,7 @@ class Dna:
 
         return {node.number: node for node in nodes}
 
-    def get_node_by_type(self, node_type: Type[Node]) -> Tuple[Node]:
+    def get_node_by_type(self, node_type: Type[NodeObject]) -> Tuple[NodeObject]:
         """
         Finds all nodes of type node_type.
         """
@@ -84,7 +73,7 @@ class Dna:
 
         return {connection.number: connection for connection in connections}
 
-    def get_node_connections(self, node: Node) -> Dict[str, Tuple[Connection]]:
+    def get_node_connections(self, node: NodeObject) -> Dict[str, Tuple[Connection]]:
         """
         Returns all connections from node and into node (src, dst).
         :param node: Node object.

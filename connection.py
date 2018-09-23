@@ -6,8 +6,7 @@
 import random
 from typing import Union
 
-# Constants
-STRING = "Connection {}: {} -> {}"
+from Constants.constants import CONNECTION_STRING
 
 
 class Connection:
@@ -24,7 +23,7 @@ class Connection:
         self.weight = weight if weight else random.random() * weight_range * 2 - weight_range
 
     def __str__(self):
-        return STRING.format(self.number, self.src_number, self.dst_number)
+        return CONNECTION_STRING.format(self.number, self.src_number, self.weight, self.dst_number)
 
     def __repr__(self):
         return str(self)
@@ -32,3 +31,4 @@ class Connection:
 
 if __name__ == '__main__':
     c = Connection(0, 1, 2, True)
+    print(c)

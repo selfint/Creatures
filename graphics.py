@@ -3,33 +3,15 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-import sys
 from typing import Union
 
 import pygame
 from pygame import gfxdraw
 
 from creature import Creature
+from Constants.constants import CENTER, BLACK, GREY, BACKGROUND
 from simulation import Simulation
-
-
-# Constants
-from constants import COLOR
-
-CAPTION = 'Creatures'
-
-HEIGHT = 600
-WIDTH = 800
-BLACK = 0, 0, 0
-GREY = 125, 125, 125
-WHITE = 255, 255, 255
-RED = 255, 0, 0
-GREEN = 0, 255, 0
-BLUE = 0, 0, 255
-BACKGROUND = 230, 220, 50
-
-CENTER = 0
-WEIGHT_RANGE = 2.0
+from Constants.types import COLOR
 
 
 def ellipse(screen: object, x: float, y: float, width: float, height: float,
@@ -83,7 +65,7 @@ def draw_object(screen: object, thing: Union[Creature], x:float, y:float, scale:
 
 class Graphics:
 
-    def __init__(self, simulation: Simulation, width: int = WIDTH, height: int = HEIGHT, caption: str = CAPTION):
+    def __init__(self, simulation: Simulation, width: int, height: int, caption: str):
         """
         Renders the simulation.
         """
@@ -112,7 +94,6 @@ class Graphics:
                 draw_object(self.screen, obj, object_info.x, object_info.y, object_info.scale)
             pygame.display.update()
             self.clock.tick()
-        sys.exit(1)
 
 
 

@@ -3,17 +3,17 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Union, Set
+from typing import Dict, Tuple, Union, Set, List
 
 from connection import Connection
-from constants import Node
-from node import *
+from Constants.types import NodeObject
+from node import InputNode, OutputNode
 
 
 class Network:
 
-    def __init__(self, nodes: Dict[int, Node],
-                 node_connections: Dict[Node, Dict[str, Tuple[Connection]]]):
+    def __init__(self, nodes: Dict[int, NodeObject],
+                 node_connections: Dict[NodeObject, Dict[str, Tuple[Connection]]]):
         self.nodes = nodes
         self.node_connections = node_connections
         self.input_nodes = [node for node in self.nodes.values() if isinstance(node, InputNode)]
@@ -31,8 +31,8 @@ class Network:
            node.set_input(value)
         return [self.get_node_output(node) for node in self.output_nodes]
 
-    def get_node_output(self, node: Node,
-                        prev_connections: Set[int]=None) -> float:
+    def get_node_output(self, node: NodeObject,
+                        prev_connections: Set[int] = None) -> float:
         """
         Gets the recursive output of a node.
         :param node: Node to get output of.

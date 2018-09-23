@@ -3,12 +3,13 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from dna import Dna, List
-from network import Network
-from constants import COLOR, CreatureNetworkInput
+from typing import List
 
-# Constants
-WEIGHT_RANGE = 2.0
+from dna import Dna
+from Constants.data_structures import CreatureNetworkInput
+from Constants.types import COLOR
+from neat_parameters import WEIGHT_RANGE
+from network import Network
 
 
 class Creature:

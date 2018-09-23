@@ -8,8 +8,7 @@ import random
 from abc import ABC, abstractmethod
 from typing import Callable, List
 
-# Constants
-STRING = "{} {} bias: {:.3f}"
+from Constants.constants import NODE_STRING
 
 
 # Activation function
@@ -27,7 +26,7 @@ class BaseNode(ABC):
         self.bias = None
 
     def __str__(self):
-        return STRING.format(self.name, self.number,
+        return NODE_STRING.format(self.name, self.number,
                              self.bias if self.bias else 0)
 
     def __repr__(self):
