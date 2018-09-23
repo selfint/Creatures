@@ -16,6 +16,5 @@ if __name__ == '__main__':
     c1, c2 = simulation.population.values()
     temp1 = simulation.info_to_vec(c1, c2)
     temp2 = simulation.info_to_vec(c2, c1)
-    print(creature1.think(temp1))
     graphics = Graphics(simulation, WIDTH, HEIGHT, CAPTION)
     graphics.run()

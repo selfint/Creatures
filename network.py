@@ -16,8 +16,8 @@ class Network:
                  node_connections: Dict[Node, Dict[str, Tuple[Connection]]]):
         self.nodes = nodes
         self.node_connections = node_connections
-        self.input_nodes = [node for node in self.nodes.values() if type(node) is InputNode]
-        self.output_nodes = [node for node in self.nodes.values() if type(node) is OutputNode]
+        self.input_nodes = [node for node in self.nodes.values() if isinstance(node, InputNode)]
+        self.output_nodes = [node for node in self.nodes.values() if isinstance(node, OutputNode)]
 
     def get_output(self, network_inputs: List[float]) -> List[float]:
         """
