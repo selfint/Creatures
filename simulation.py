@@ -21,6 +21,8 @@ class Simulation:
         self.population = dict()
         self.world_width = width
         self.world_height = height
+
+        # Map creatures to creature info named tuples.
         for i in range(population_size):
             primary = choice(list(CREATURE_COLORS.values()))
             secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
