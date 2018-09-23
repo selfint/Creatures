@@ -24,11 +24,16 @@ class Simulation:
 
         # Map creatures to creature info named tuples.
         for i in range(population_size):
+
+            # Generate random colors, add species-based colors later.
             primary = choice(list(CREATURE_COLORS.values()))
             secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
+
+            # Generate creature and creature info.
             creature = Creature(creature_inputs, creature_outputs,
                                 colors=[primary, secondary], weight_range=WEIGHT_RANGE, name=str(i))
-            self.population[creature] = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
+            creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
+            self.population[creature] = creature_info
 
         # Add all object in the world and their info into the world info dictionary.
         self.world_info = self.population
