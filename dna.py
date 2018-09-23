@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Type
 from constants import Node
 
 from connection import Connection
@@ -65,11 +65,11 @@ class Dna:
 
         return {node.number: node for node in nodes}
 
-    def get_node_by_type(self, node_type: type) -> Tuple[Node]:
+    def get_node_by_type(self, node_type: Type[Node]) -> Tuple[Node]:
         """
         Finds all nodes of type node_type.
         """
-        return tuple(node for node in self.nodes.values() if type(node) is node_type)
+        return tuple(node for node in self.nodes.values() if isinstance(node, node_type))
 
     def connect_nodes(self) -> Dict[int, Connection]:
         """
@@ -98,3 +98,4 @@ class Dna:
 if __name__ == '__main__':
     n = Dna(2, 1, 2)
     print(n)
+    print(n.get_node_by_type(InputNode))
