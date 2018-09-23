@@ -5,13 +5,16 @@
 # Imports
 from typing import Union
 
+# Pygame
 import pygame
 from pygame import gfxdraw
 
-from creature import Creature
+# Constants
 from Constants.constants import CENTER, BLACK, GREY, BACKGROUND
-from simulation import Simulation
 from Constants.types import COLOR
+# Objects
+from creature import Creature
+from simulation import Simulation
 
 
 def ellipse(screen: object, x: float, y: float, width: float, height: float,

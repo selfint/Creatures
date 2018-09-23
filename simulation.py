@@ -5,10 +5,12 @@
 # Imports
 from random import randint, choice
 
-from creature import Creature
+# Constants
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS
 from Constants.data_structures import CreatureInfo, CreatureNetworkInput
-from neat_parameters import WEIGHT_RANGE
+from Constants.neat_parameters import WEIGHT_RANGE
+# Objects
+from creature import Creature
 
 
 class Simulation:

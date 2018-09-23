@@ -5,10 +5,12 @@
 # Imports
 from typing import Dict, Tuple, Type
 
-from connection import Connection
-from functions import dict_string
+# Constants
 from Constants.constants import DNA_STRING
 from Constants.types import NodeObject
+# Objects
+from connection import Connection
+from functions import dict_string
 from node import InputNode, HiddenNode, OutputNode
 
 

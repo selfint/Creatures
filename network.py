@@ -5,8 +5,10 @@
 # Imports
 from typing import Dict, Tuple, Union, Set, List
 
-from connection import Connection
+# Constants
 from Constants.types import NodeObject
+# Objects
+from connection import Connection
 from node import InputNode, OutputNode
 
 

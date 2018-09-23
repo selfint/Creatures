@@ -5,10 +5,12 @@
 # Imports
 from typing import List
 
-from dna import Dna
+# Constants
 from Constants.data_structures import CreatureNetworkInput
+from Constants.neat_parameters import WEIGHT_RANGE
 from Constants.types import COLOR
-from neat_parameters import WEIGHT_RANGE
+# Objects
+from dna import Dna
 from network import Network
 
 

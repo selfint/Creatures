@@ -2,13 +2,15 @@
 # Description: project constants.
 # ---------------------------------------------------------------------------------------------------------------------
 
-
+# Imports
 import sys
 
+# Constants
+from Constants.constants import WIDTH, HEIGHT, CAPTION
+from Constants.neat_parameters import POPULATION_SIZE, CREATURE_INPUTS, CREATURE_OUTPUTS
+# Objects
 from graphics import Graphics
 from simulation import Simulation
-from neat_parameters import POPULATION_SIZE, CREATURE_INPUTS, CREATURE_OUTPUTS
-from Constants.constants import WIDTH, HEIGHT, CAPTION
 
 # Run simulation.
 if __name__ == '__main__':
