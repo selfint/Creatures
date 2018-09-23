@@ -13,6 +13,7 @@ def print_dict(dictionary: dict):
         except TypeError:
             print('', value)
 
+
 def dict_string(dictionary: dict):
     if dictionary is None:
         return ''
@@ -29,6 +30,12 @@ def dict_string(dictionary: dict):
 
     return string
 
+
+def clamp(value: float, x_min: float, x_max: float) -> float:
+    """
+    Clamps a value between a min and a max.
+    """
+    return max(x_min, min(value, x_max))
 
 if __name__ == '__main__':
     a = {'a': 1, 'b': 2, 'c': [1, 2]}

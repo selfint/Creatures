@@ -8,7 +8,6 @@ from collections import namedtuple
 
 # Data structures.
 # - Creature -
-# CreatureInfo = namedtuple('CreatureInfo', 'x y scale')
 # Creature information is mutable, so cant use named tuple
 class CreatureInfo:
 
@@ -16,6 +15,9 @@ class CreatureInfo:
         self.x = x
         self.y = y
         self.scale = scale
+
 CreatureNetworkInput = namedtuple('NetworkInput', 'dx dy')
-CreatureNetworkOutput = namedtuple('NetworkOutput', 'left right up down urgent')
-CreatureActions = namedtuple('CreatureActions', 'move_x move_y')
+CreatureNetworkOutput = namedtuple('NetworkOutput', 'left right up down urgency')
+# Each variable that has a matching name in CreatureInfo shows how to change that variable.
+# For example: CreatureInfo(x=100, y=100, scale=1) + CreatureActions(x=1, y=-0.3) = CreatureInfo(x=101, y=99.7, scale=1)
+CreatureActions = namedtuple('CreatureActions', 'x y')
