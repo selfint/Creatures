@@ -105,7 +105,7 @@ class Simulation:
 
     def info_to_vec(self, creature_info: CreatureInfo, other_info: CreatureInfo) -> CreatureNetworkInput:
         """
-        Meaningfully convert CreatureInfo of a target creature to a vector,
+        Meaningfully convert CreatureInfo of a target creature to a CreatureNetworkInput named tuple,
         based on the creature info of the source creature.
         :param creature_info: Source creature (creature LOOKING).
         :param other_info: Destination creature (creature SEEN).
