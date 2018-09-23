@@ -6,8 +6,10 @@
 from random import randint, choice
 
 # Constants
+from typing import List
+
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS
-from Constants.data_structures import CreatureInfo, CreatureNetworkInput
+from Constants.data_structures import CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput, CreatureActions
 from Constants.neat_parameters import WEIGHT_RANGE
 # Objects
 from creature import Creature
@@ -48,6 +50,15 @@ class Simulation:
             creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
                                   for other, other_info in self.world_info.items() if other is not creature]
             print(creature_decisions)
+            creature_info.x += 0.1
+
+    def interpret_decisions(self, decisions: List[CreatureNetworkOutput]) -> CreatureActions:
+        """
+        Converts creature network output to creature actions.
+        :param decisions: All decisions creature made towards all other creatures.
+        """
+        for decision in decisions:
+            pass
 
     def info_to_vec(self, creature_info: CreatureInfo, other_info: CreatureInfo) -> CreatureNetworkInput:
         """
