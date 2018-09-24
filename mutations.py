@@ -20,23 +20,23 @@ class BaseMutation(ABC):
 
 class WeightMutation(BaseMutation):
 
-    def __init__(self, number: int, connection: Connection, pertrube_rate: float, pertrube_amount: float,
+    def __init__(self, number: int, connection: Connection, pertrub_rate: float, pertrub_amount: float,
                  weight_range: float = WEIGHT_RANGE):
         super(WeightMutation, self).__init__(number)
         self.connection = connection
-        if random() < pertrube_rate:
-            self.new_weight = self.connection.weight + (random() * 2 - 1) * pertrube_amount
+        if random() < pertrub_rate:
+            self.new_weight = self.connection.weight + (random() * 2 - 1) * pertrub_amount
         else:
             self.new_weight = random() * weight_range * 2 - weight_range
 
 class BiasMutation(BaseMutation):
 
-    def __init__(self, number: int, node: NodeObject, pertrube_rate: float, pertrube_amount: float,
+    def __init__(self, number: int, node: NodeObject, pertrub_rate: float, pertrub_amount: float,
                  bias_range: float = BIAS_RANGE):
         super(BiasMutation, self).__init__(number)
         self.node = node
-        if random() < pertrube_rate:
-            self.new_bias = self.node.bias + (random() * 2 - 1) * pertrube_amount
+        if random() < pertrub_rate:
+            self.new_bias = self.node.bias + (random() * 2 - 1) * pertrub_amount
         else:
             self.new_bias = random() * bias_range * 2 - bias_range
 

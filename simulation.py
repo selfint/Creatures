@@ -10,7 +10,7 @@ from typing import List
 
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS, SPEED_SCALING
 from Constants.data_structures import CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput, CreatureActions
-from Constants.neat_parameters import WEIGHT_RANGE
+from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
 from functions import clamp
@@ -116,7 +116,8 @@ class Simulation:
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
 
-    def weight_mutation(self, creature: Creature):
+    def weight_mutation(self, creature: Creature, weight_mutation_rate: float = WEIGHT_MUTATION_RATE,
+                        weight_pertrub_rate: float = WEIGHT_PERTRUB_RATE):
         """
         Return a weight mutation object from the creature. A weight mutation has no number, the object is here
         for organization purposes.
