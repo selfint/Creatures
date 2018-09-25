@@ -60,7 +60,9 @@ class Dna:
         """
         Finds all nodes of type node_type.
         """
-        return tuple(node for node in self.nodes.values() if isinstance(node, node_type))
+
+        # Use type(x) is y, since we want exact types, ignoring inheritance.
+        return tuple(node for node in self.nodes.values() if type(node) is node_type)
 
     def connect_nodes(self) -> Dict[int, Connection]:
         """
