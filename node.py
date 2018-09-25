@@ -23,12 +23,11 @@ class BaseNode(ABC):
         self.number = number
         self.activation = activation
         self.name = self.__class__.__name__
+        self.bias = 0
         self.reset_node()
-        self.bias = None
 
     def __str__(self):
-        return NODE_STRING.format(self.name, self.number,
-                             self.bias if self.bias else 0)
+        return NODE_STRING.format(self.name, self.number, self.bias)
 
     def __repr__(self):
         return str(self)

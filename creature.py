@@ -45,9 +45,11 @@ class Creature:
         """
         return CreatureNetworkOutput(*self.network.get_output(list(inputs)))
 
+
 if __name__ == '__main__':
     from node import *
     from connection import Connection
+
     nodes = {0: InputNode(0),
              1: HiddenNode(1, 2),
              2: OutputNode(2, 2)}
