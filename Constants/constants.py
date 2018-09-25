@@ -13,8 +13,12 @@ Output Nodes: {}
 {}
 --------------------
 """
-CONNECTION_STRING = "Connection {}: {} -({:.2f})-> {}"
-NODE_STRING = "{} {} bias: {:.3f}"
+CONNECTION_STRING = "<Connection #{}: {} -({:.2f})-> {}>"
+NODE_STRING = "<{} #{} bias: {:.3f}>"
+BASE_MUTATION_STRING = "<{} #{}:: {}>"
+WEIGHT_MUTATION_STRING = "<Connection {}: #{} -({:.2f} => {:.2f})-> #{}>"
+BIAS_MUTATION_STRING = "<{} #{} bias: {:.3f} => {:.3f}>"
+NODE_MUTATION_STRING = "<#{} -({:.2f})-> #{} -({:.2f})-> #{}>"
 
 # Graphics.
 CAPTION = 'Creatures'
