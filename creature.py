@@ -11,6 +11,7 @@ from Constants.neat_parameters import WEIGHT_RANGE
 from Constants.types import COLOR
 # Objects
 from dna import Dna
+from mutations import BaseMutation
 from network import Network
 
 
@@ -43,6 +44,10 @@ class Creature:
         :return: Creature decision.
         """
         return CreatureNetworkOutput(*self.network.get_output(list(inputs)))
+
+    def update(self, mutations: List[BaseMutation]):
+        self.dna.update(mutations)
+        self.network = Network(self.dna.nodes, self.dna.node_connections)
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@
 # Imports
 from abc import ABC, abstractmethod
 from random import random
-from typing import Union
+from typing import Union, List
 
 # Constants
 from Constants.constants import NUMBERED_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, \
@@ -28,6 +28,12 @@ class BaseMutation(ABC):
 
     def __repr__(self):
         return str(self)
+
+    @abstractmethod
+    def fields(self) -> List[str]:
+        """
+        Returns all fields this mutation updates.
+        """
 
 
 class NumberedMutation(ABC):
@@ -56,6 +62,13 @@ class NumberedMutation(ABC):
         Sets the numbers for dst connection, new node and src connection.
         """
 
+    @abstractmethod
+    def fields(self) -> List[str]:
+        """
+        Returns all fields this mutation updates.
+        :return:
+        """
+
 
 class WeightMutation(BaseMutation):
 
@@ -72,6 +85,9 @@ class WeightMutation(BaseMutation):
 
         # Generate mutation string.
         self.string = WEIGHT_MUTATION_STRING.format(number, src, weight, self.new_weight, dst)
+
+    def fields(self):
+        return {'changed': self.connection, 'new_fields': {'weight': self.new_weight}}
 
 
 class BiasMutation(BaseMutation):

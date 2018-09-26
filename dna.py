@@ -12,6 +12,7 @@ from Constants.types import NodeObject
 # Objects
 from connection import Connection
 from functions import dict_string
+from mutations import BaseMutation, WeightMutation, BiasMutation, ConnectionMutation, NodeMutation
 from node import InputNode, HiddenNode, OutputNode
 
 
@@ -111,8 +112,14 @@ class Dna:
 
         return {'src': src, 'dst': dst}
 
+    def update(self, mutations: List[BaseMutation]) -> None:
+        """
+        Applies all mutations.
+        """
+        # TODO 9/26/2018 update: Add a dictionary that maps each mutation and what attributes it updates.
+
 
 if __name__ == '__main__':
-    n = Dna(2, 1, 2)
+    n = Dna(2, 1)
     print(n)
     print(n.get_node_by_type(OutputNode))

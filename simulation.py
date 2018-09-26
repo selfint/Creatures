@@ -15,7 +15,7 @@ from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_
 # Objects
 from creature import Creature
 from functions import clamp
-from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, NumberedMutation
+from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, NumberedMutation, BaseMutation
 
 
 class Simulation:
@@ -170,7 +170,7 @@ class Simulation:
         mutation = NodeMutation(None, connection)
         return mutation
 
-    def mutate(self, creature: Creature) -> List[NumberedMutation]:
+    def mutate(self, creature: Creature) -> List[BaseMutation]:
         """
         Get mutations based on the creature, based on random chance and neat_parameter values.
         """
@@ -191,6 +191,14 @@ class Simulation:
             mutations.append(self.node_mutation(creature))
 
         return mutations
+
+    def apply_mutations(self, creature: Creature, mutations: List[BaseMutation]) -> None:
+        """
+        Applies mutation to creature's dna.
+        """
+
+        for mutation in mutations:
+            creature.update(mutation)
 
 
 if __name__ == '__main__':
