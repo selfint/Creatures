@@ -4,16 +4,18 @@
 
 # Imports
 from random import randint, choice
+from typing import List, Union
 
 # Constants
-from typing import List
-
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS, SPEED_SCALING
 from Constants.data_structures import CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput, CreatureActions
-from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_MUTATION_RATE
+from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_PERTRUB_AMOUNT, \
+    BIAS_RANGE, BIAS_PERTRUB_RATE, BIAS_PERTRUB_AMOUNT
 # Objects
 from creature import Creature
 from functions import clamp
+from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, BaseMutation
+from node import InputNode, HiddenNode, OutputNode
 
 
 class Simulation:
@@ -116,29 +118,69 @@ class Simulation:
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
 
-    def weight_mutation(self, creature: Creature, weight_mutation_rate: float = WEIGHT_MUTATION_RATE,
-                        weight_pertrub_rate: float = WEIGHT_PERTRUB_RATE):
+    def weight_mutation(self, creature: Creature, weight_range: float = WEIGHT_RANGE,
+                        weight_pertrub_rate: float = WEIGHT_PERTRUB_RATE,
+                        weight_pertrub_amount: float = WEIGHT_PERTRUB_AMOUNT) -> WeightMutation:
         """
         Return a weight mutation object from the creature. A weight mutation has no number, the object is here
-        for organization purposes.
+        for organization purposes. ALWAYS returns a mutation, random chance is handle in simulation.mutate().
         """
 
-    def connection_mutation(self, creature: Creature):
+        # Choose random connection.
+        connection = choice(list(creature.dna.connections.values()))
+
+        # Generate random weight mutation.
+        mutation = WeightMutation(None, connection, weight_pertrub_rate, weight_pertrub_amount, weight_range)
+        return mutation
+
+    def bias_mutation(self, creature: Creature, bias_range: float = BIAS_RANGE,
+                      bias_pertrub_rate: float = BIAS_PERTRUB_RATE,
+                      bias_pertrub_amount: float = BIAS_PERTRUB_AMOUNT) -> BiasMutation:
+        """
+        Return a weight mutation object from the creature. A weight mutation has no number, the object is here
+        for organization purposes. ALWAYS returns a mutation, random chance is handle in simulation.mutate().
+        """
+
+        # Choose random node.
+        node = choice(list(creature.dna.nodes.values()))
+
+        # Generate random weight mutation.
+        mutation = BiasMutation(None, node, bias_pertrub_rate, bias_pertrub_amount, bias_range)
+        return mutation
+
+    def connection_mutation(self, creature: Creature, weight_range: float = WEIGHT_RANGE) -> ConnectionMutation:
         """
         Returns a new old_connection mutation based on the creature.
         """
 
-    def node_mutation(self, creature: Creature):
+        # Get all creature dna's nodes and connections.
+        available_connections = creature.dna.get_available_connections()
+
+        # Choose random connection to generate.
+        src, dst = choice(available_connections)
+
+        # Generate new connection between nodes.
+        mutation = ConnectionMutation(None, src, dst, weight_range)
+        return mutation
+
+    def node_mutation(self, creature: Creature) -> NodeMutation:
         """
         Returns a new node mutation based on the creature.
         """
 
-    def mutate(self, creature: Creature):
+    def mutate(self, creature: Creature) -> Union[None, BaseMutation]:
         """
         Get mutations based on the creature, based on random chance and neat_parameter values.
         """
 
 if __name__ == '__main__':
     s = Simulation(2, 2, 4)
-    c1, c2 = s.population.values()
-    s.info_to_vec(c1, c2)
+    c1, c2 = s.population.keys()
+    ci1, ci2 = s.population.values()
+    print(s.info_to_vec(ci1, ci2))
+    print(s.weight_mutation(c1))
+    print(s.bias_mutation(c1))
+    if c1.dna.get_available_connections():
+        print(s.connection_mutation(c1))
+    print(s.node_mutation(c1))
+    # print(c1.dna)
