@@ -30,11 +30,13 @@ class BaseMutation(ABC):
         return str(self)
 
 
-class NumberedMutation(BaseMutation):
+class NumberedMutation(ABC):
 
     def __init__(self, number: Union[int, None]):
         super(NumberedMutation, self).__init__()
         self.number = number
+        self.name = self.__class__.__name__
+        self.string = ''
 
     def __str__(self):
         return NUMBERED_MUTATION_STRING.format(self.name, self.number, self.string)
