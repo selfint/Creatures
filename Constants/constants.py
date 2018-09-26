@@ -13,12 +13,15 @@ Output Nodes: {}
 {}
 --------------------
 """
-CONNECTION_STRING = "<Connection #{}: {} -({:.2f})-> {}>"
+
+# Amount of "#" meaning: 1 -> Node number, 2 -> Connection number, 3 -> Mutation number.
+CONNECTION_STRING = "<Connection ##{}({}): #{} -({:.2f})-> #{}>"
 NODE_STRING = "<{} #{} bias: {:.3f}>"
-BASE_MUTATION_STRING = "<{} #{}:: {}>"
-WEIGHT_MUTATION_STRING = "<Connection {}: #{} -({:.2f} => {:.2f})-> #{}>"
+BASE_MUTATION_STRING = "<{} :: {}"
+NUMBERED_MUTATION_STRING = "<{} ###{}:: {}>"
+WEIGHT_MUTATION_STRING = "<Connection ##{}: #{} -({:.2f} => {:.2f})-> #{}>"
 BIAS_MUTATION_STRING = "<{} #{} bias: {:.3f} => {:.3f}>"
-NODE_MUTATION_STRING = "<#{} -({:.2f})=> #{} -({:.2f})=> #{}>"
+NODE_MUTATION_STRING = "< Split: {} | Src: {} | Node: {} | dst: {} >"
 
 # Graphics.
 CAPTION = 'Creatures'
