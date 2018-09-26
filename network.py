@@ -54,7 +54,7 @@ class Network:
 
         # Get each input nodes output and corresponding weight.
         inputs = [self.get_node_output(self.nodes[input_connection.src_number], prev_connections)
-                  * input_connection.weight for input_connection in input_connections]
+                  * input_connection.weight for input_connection in input_connections if input_connection.enabled]
 
         # Set node input
         node.set_input(inputs)
