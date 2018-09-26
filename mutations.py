@@ -8,16 +8,12 @@ from random import random
 from typing import Union
 
 # Constants
-from Constants.constants import BASE_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, CONNECTION_STRING
+from Constants.constants import BASE_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, NODE_MUTATION_STRING
 from Constants.neat_parameters import WEIGHT_RANGE, BIAS_RANGE
 from Constants.types import NodeObject
 from connection import Connection
 from node import HiddenNode
 
-# WEIGHT_MUTATION_STRING = "Connection {}: {} -({:.2f}=>{:.2f})-> {}"
-# BIAS_MUTATION_STRING = "{} {} bias: {:.3f} => {:.3f}"
-# NODE_MUTATION_STRING = "{} -({:.2f})-> {} -({:.2f})-> {}"
-# BASE_MUTATION_STRING = "{} {}:: {}"
 class BaseMutation(ABC):
 
     def __init__(self, number: Union[int, None]):
@@ -83,18 +79,23 @@ class NodeMutation(BaseMutation):
     def __init__(self, number: Union[int, None], connection: Connection, weight_range:float = WEIGHT_RANGE):
         super(NodeMutation, self).__init__(number)
         self.old_connection = connection
+        old_src, old_dst, old_weight = connection.src_number, connection.dst_number, connection.weight
 
         # The number of the connection this node split, will be used to identify identical node mutations.
-        self.split_number = connection.number
+        self.connection_number = connection.number
 
         # src----old_connection--->dst
         # src-dst_conn->new_node->src_conn->dst
         # Connection that has new_node as DST.
-        self.new_dst_connection = Connection(None, self.old_connection.src_number, None, weight_range)
+        self.new_dst_connection = Connection(None, old_src, None, weight=1)
         self.new_node = HiddenNode(None, BIAS_RANGE)
 
         # Connection that has new_node as SRC.
-        self.new_src_connection = Connection(None, None, self.old_connection.dst_number, weight_range)
+        self.new_src_connection = Connection(None, None, old_dst, weight=old_weight)
+
+        self.string = NODE_MUTATION_STRING.format(self.new_dst_connection.src_number, self.new_dst_connection.weight,
+                                                  self.new_node.number, self.new_src_connection.weight,
+                                                  self.new_src_connection.dst_number)
 
 
 

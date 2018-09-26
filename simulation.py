@@ -3,14 +3,15 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from random import randint, choice
+from random import randint, choice, random
 from typing import List, Union
 
 # Constants
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS, SPEED_SCALING
 from Constants.data_structures import CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput, CreatureActions
 from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_PERTRUB_AMOUNT, \
-    BIAS_RANGE, BIAS_PERTRUB_RATE, BIAS_PERTRUB_AMOUNT
+    BIAS_RANGE, BIAS_PERTRUB_RATE, BIAS_PERTRUB_AMOUNT, WEIGHT_MUTATION_RATE, BIAS_MUTATION_RATE, \
+    CONNECTION_MUTATION_RATE, NODE_MUTATION_RATE
 # Objects
 from creature import Creature
 from functions import clamp
@@ -154,7 +155,7 @@ class Simulation:
         """
 
         # Get all creature dna's nodes and connections.
-        available_connections = creature.dna.get_available_connections()
+        available_connections = creature.dna.available_connections()
 
         # Choose random connection to generate.
         src, dst = choice(available_connections)
@@ -163,15 +164,46 @@ class Simulation:
         mutation = ConnectionMutation(None, src, dst, weight_range)
         return mutation
 
-    def node_mutation(self, creature: Creature) -> NodeMutation:
+    def node_mutation(self, creature: Creature, weight_range: float = WEIGHT_RANGE) -> NodeMutation:
         """
         Returns a new node mutation based on the creature.
         """
 
-    def mutate(self, creature: Creature) -> Union[None, BaseMutation]:
+        # Choose a random connection to split.
+        connection = choice(list(creature.dna.connections.values()))
+
+        # Generate node mutation.
+        mutation = NodeMutation(None, connection, weight_range)
+        return mutation
+
+    def mutate(self, creature: Creature, weight_mutation_rate: float = WEIGHT_MUTATION_RATE,
+               weight_range: float = WEIGHT_RANGE, weight_pertrub_rate: float = WEIGHT_PERTRUB_RATE,
+               weight_pertrub_amount: float = WEIGHT_PERTRUB_AMOUNT, bias_mutation_rate: float = BIAS_MUTATION_RATE,
+               bias_range: float = BIAS_RANGE, bias_pertrub_rate: float = BIAS_PERTRUB_RATE,
+               bias_pertrub_amount: float = BIAS_PERTRUB_AMOUNT,
+               connection_mutation_rate: float = CONNECTION_MUTATION_RATE,
+               node_mutation_rate: float = NODE_MUTATION_RATE) -> List[BaseMutation]:
         """
         Get mutations based on the creature, based on random chance and neat_parameter values.
         """
+        mutations = []
+
+        # Weight and bias mutations.
+        if random() < weight_mutation_rate:
+            mutations.append(self.weight_mutation(creature, weight_range, weight_pertrub_rate, weight_pertrub_amount))
+        if random() < bias_mutation_rate:
+            mutations.append(self.bias_mutation(creature, bias_range,bias_pertrub_rate, bias_pertrub_amount))
+
+        # Check if a connection is possible if random wants to mutate a connection.
+        if creature.dna.available_connections(shallow=True) and random() < connection_mutation_rate:
+            mutations.append(self.connection_mutation(creature, weight_range))
+
+        # Node mutation.
+        if random() < node_mutation_rate:
+            mutations.append(self.node_mutation(creature, weight_range))
+
+        return mutations
+
 
 if __name__ == '__main__':
     s = Simulation(2, 2, 4)
@@ -180,7 +212,7 @@ if __name__ == '__main__':
     print(s.info_to_vec(ci1, ci2))
     print(s.weight_mutation(c1))
     print(s.bias_mutation(c1))
-    if c1.dna.get_available_connections():
+    if c1.dna.available_connections():
         print(s.connection_mutation(c1))
     print(s.node_mutation(c1))
     # print(c1.dna)

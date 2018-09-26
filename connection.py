@@ -7,12 +7,13 @@ import random
 from typing import Union
 
 from Constants.constants import CONNECTION_STRING
+from Constants.neat_parameters import WEIGHT_RANGE
 
 
 class Connection:
 
     def __init__(self, number: Union[int, None], src_number: Union[int, None], dst_number: Union[int, None],
-                 weight_range: float, weight: float = None):
+                 weight_range: float = WEIGHT_RANGE, weight: float = None):
         self.number = number
         self.src_number = src_number
         self.dst_number = dst_number

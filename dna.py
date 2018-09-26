@@ -43,9 +43,10 @@ class Dna:
     def __repr__(self):
         return str(self)
 
-    def get_available_connections(self) -> List[Tuple[int, int]]:
+    def available_connections(self, shallow: bool = False) -> List[Tuple[int, int]]:
         """
         Returns all nodes that can be connected.
+        :param shallow: If set, function will return the first available connection.
         """
 
         # Get all available connections by the following conditions:
@@ -62,6 +63,8 @@ class Dna:
                         src_type = type(self.nodes[src_number])
                         if src_type is not dst_type or src_type is HiddenNode:
                             available_connections.append((src_number, dst_number))
+                            if shallow:
+                                return available_connections
 
         return available_connections
 
