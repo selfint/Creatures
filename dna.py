@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Type
+from typing import Dict, Tuple, Type, List
 
 # Constants
 from Constants.constants import DNA_STRING
@@ -42,6 +42,28 @@ class Dna:
 
     def __repr__(self):
         return str(self)
+
+    def get_available_connections(self) -> List[Tuple[int, int]]:
+        """
+        Returns all nodes that can be connected.
+        """
+
+        # Get all available connections by the following conditions:
+        # 1. No duplicate connections.
+        # 2. A connection cannot output into an InputNode.
+        # 3. An OutputNode cannot output into an OutputNode, but a HiddenNode can output into a HiddenNode.
+        available_connections = []
+        connections = [(connection.src_number, connection.dst_number) for connection in self.connections.values()]
+        for src_number in self.nodes:
+            for dst_number in [node_number for node_number in self.nodes if node_number != src_number]:
+                if (src_number, dst_number) not in connections:
+                    dst_type = type(self.nodes[dst_number])
+                    if dst_type is not InputNode:
+                        src_type = type(self.nodes[src_number])
+                        if src_type is not dst_type or src_type is HiddenNode:
+                            available_connections.append((src_number, dst_number))
+
+        return available_connections
 
     def generate_nodes(self) -> Dict[int, NodeObject]:
         """
@@ -91,4 +113,4 @@ class Dna:
 if __name__ == '__main__':
     n = Dna(2, 1, 2)
     print(n)
-    print(n.get_node_by_type(InputNode))
+    print(n.get_node_by_type(OutputNode))
