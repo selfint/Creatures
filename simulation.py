@@ -38,8 +38,7 @@ class Simulation:
             secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
 
             # Generate creature and creature info.
-            creature = Creature(creature_inputs, creature_outputs,
-                                colors=[primary, secondary], weight_range=WEIGHT_RANGE, name=str(i))
+            creature = Creature(creature_inputs, creature_outputs, colors=[primary, secondary], name=str(i))
             creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
             self.population[creature] = creature_info
 
@@ -118,9 +117,7 @@ class Simulation:
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
 
-    def weight_mutation(self, creature: Creature, weight_range: float = WEIGHT_RANGE,
-                        weight_pertrub_rate: float = WEIGHT_PERTRUB_RATE,
-                        weight_pertrub_amount: float = WEIGHT_PERTRUB_AMOUNT) -> WeightMutation:
+    def weight_mutation(self, creature: Creature) -> WeightMutation:
         """
         Return a weight mutation object from the creature. A weight mutation has no number, the object is here
         for organization purposes. ALWAYS returns a mutation, random chance is handle in simulation.mutate().
@@ -130,12 +127,10 @@ class Simulation:
         connection = choice(list(creature.dna.connections.values()))
 
         # Generate random weight mutation.
-        mutation = WeightMutation(connection, weight_pertrub_rate, weight_pertrub_amount, weight_range)
+        mutation = WeightMutation(connection)
         return mutation
 
-    def bias_mutation(self, creature: Creature, bias_range: float = BIAS_RANGE,
-                      bias_pertrub_rate: float = BIAS_PERTRUB_RATE,
-                      bias_pertrub_amount: float = BIAS_PERTRUB_AMOUNT) -> BiasMutation:
+    def bias_mutation(self, creature: Creature) -> BiasMutation:
         """
         Return a weight mutation object from the creature. A weight mutation has no number, the object is here
         for organization purposes. ALWAYS returns a mutation, random chance is handle in simulation.mutate().
@@ -145,10 +140,10 @@ class Simulation:
         node = choice(list(creature.dna.nodes.values()))
 
         # Generate random weight mutation.
-        mutation = BiasMutation(node, bias_pertrub_rate, bias_pertrub_amount, bias_range)
+        mutation = BiasMutation(node)
         return mutation
 
-    def connection_mutation(self, creature: Creature, weight_range: float = WEIGHT_RANGE) -> ConnectionMutation:
+    def connection_mutation(self, creature: Creature) -> ConnectionMutation:
         """
         Returns a new old_connection mutation based on the creature.
         """
@@ -160,10 +155,10 @@ class Simulation:
         src, dst = choice(available_connections)
 
         # Generate new connection between nodes.
-        mutation = ConnectionMutation(None, src, dst, weight_range)
+        mutation = ConnectionMutation(None, src, dst)
         return mutation
 
-    def node_mutation(self, creature: Creature, weight_range: float = WEIGHT_RANGE) -> NodeMutation:
+    def node_mutation(self, creature: Creature) -> NodeMutation:
         """
         Returns a new node mutation based on the creature.
         """
@@ -175,31 +170,25 @@ class Simulation:
         mutation = NodeMutation(None, connection)
         return mutation
 
-    def mutate(self, creature: Creature, weight_mutation_rate: float = WEIGHT_MUTATION_RATE,
-               weight_range: float = WEIGHT_RANGE, weight_pertrub_rate: float = WEIGHT_PERTRUB_RATE,
-               weight_pertrub_amount: float = WEIGHT_PERTRUB_AMOUNT, bias_mutation_rate: float = BIAS_MUTATION_RATE,
-               bias_range: float = BIAS_RANGE, bias_pertrub_rate: float = BIAS_PERTRUB_RATE,
-               bias_pertrub_amount: float = BIAS_PERTRUB_AMOUNT,
-               connection_mutation_rate: float = CONNECTION_MUTATION_RATE,
-               node_mutation_rate: float = NODE_MUTATION_RATE) -> List[NumberedMutation]:
+    def mutate(self, creature: Creature) -> List[NumberedMutation]:
         """
         Get mutations based on the creature, based on random chance and neat_parameter values.
         """
         mutations = []
 
         # Weight and bias mutations.
-        if random() < weight_mutation_rate:
-            mutations.append(self.weight_mutation(creature, weight_range, weight_pertrub_rate, weight_pertrub_amount))
-        if random() < bias_mutation_rate:
-            mutations.append(self.bias_mutation(creature, bias_range,bias_pertrub_rate, bias_pertrub_amount))
+        if random() < WEIGHT_MUTATION_RATE:
+            mutations.append(self.weight_mutation(creature))
+        if random() < BIAS_MUTATION_RATE:
+            mutations.append(self.bias_mutation(creature))
 
         # Check if a connection is possible if random wants to mutate a connection.
-        if creature.dna.available_connections(shallow=True) and random() < connection_mutation_rate:
-            mutations.append(self.connection_mutation(creature, weight_range))
+        if creature.dna.available_connections(shallow=True) and random() < CONNECTION_MUTATION_RATE:
+            mutations.append(self.connection_mutation(creature))
 
         # Node mutation.
-        if random() < node_mutation_rate:
-            mutations.append(self.node_mutation(creature, weight_range))
+        if random() < NODE_MUTATION_RATE:
+            mutations.append(self.node_mutation(creature))
 
         return mutations
 

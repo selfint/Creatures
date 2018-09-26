@@ -7,6 +7,7 @@ from typing import Dict, Tuple, Type, List
 
 # Constants
 from Constants.constants import DNA_STRING
+from Constants.neat_parameters import BIAS_RANGE, WEIGHT_RANGE
 from Constants.types import NodeObject
 # Objects
 from connection import Connection
@@ -16,8 +17,7 @@ from node import InputNode, HiddenNode, OutputNode
 
 class Dna:
 
-    def __init__(self, inputs: int = None, outputs: int = None, weight_range: float = 2.0,
-                 nodes: Dict[int, NodeObject] = None,
+    def __init__(self, inputs: int = None, outputs: int = None, nodes: Dict[int, NodeObject] = None,
                  connections: Dict[int, Connection] = None):
 
         # Take input & output node amount if given, else take values.
@@ -25,7 +25,6 @@ class Dna:
             if nodes else inputs
         self.outputs = len([node for node in nodes if isinstance(node, OutputNode)]) \
             if nodes else outputs
-        self.weight_range = self.bias_range = weight_range
 
         # Generate nodes if not given any.
         self.nodes = nodes if nodes is not None else self.generate_nodes()
@@ -77,7 +76,7 @@ class Dna:
         for n in range(self.inputs):
             nodes.append(InputNode(len(nodes)))
         for n in range(self.outputs):
-            nodes.append(OutputNode(len(nodes), self.bias_range))
+            nodes.append(OutputNode(len(nodes), BIAS_RANGE))
 
         return {node.number: node for node in nodes}
 
@@ -98,7 +97,7 @@ class Dna:
         connections = []
         for src in self.input_nodes:
             for dst in self.output_nodes:
-                connections.append(Connection(len(connections), src.number, dst.number, self.weight_range))
+                connections.append(Connection(len(connections), src.number, dst.number, WEIGHT_RANGE))
 
         return {connection.number: connection for connection in connections}
 

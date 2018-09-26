@@ -13,14 +13,13 @@ from Constants.neat_parameters import WEIGHT_RANGE
 class Connection:
 
     def __init__(self, number: Union[int, None], src_number: Union[int, None], dst_number: Union[int, None],
-                 weight_range: float = WEIGHT_RANGE, weight: float = None, enabled: bool = True):
+                 weight: float = None, enabled: bool = True):
         self.number = number
         self.src_number = src_number
         self.dst_number = dst_number
-        self.weight_range = weight_range
 
         # Calculate random weight_value
-        self.weight = weight if weight else random.random() * weight_range * 2 - weight_range
+        self.weight = weight if weight else random.random() * WEIGHT_RANGE * 2 - WEIGHT_RANGE
         self.enabled = enabled
 
     def __str__(self):

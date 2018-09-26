@@ -10,7 +10,8 @@ from typing import Union
 # Constants
 from Constants.constants import NUMBERED_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, \
     NODE_MUTATION_STRING, BASE_MUTATION_STRING
-from Constants.neat_parameters import WEIGHT_RANGE, BIAS_RANGE
+from Constants.neat_parameters import WEIGHT_RANGE, BIAS_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_PERTRUB_AMOUNT, \
+    BIAS_PERTRUB_RATE, BIAS_PERTRUB_AMOUNT
 from Constants.types import NodeObject
 from connection import Connection
 from node import HiddenNode
@@ -56,17 +57,16 @@ class NumberedMutation(BaseMutation):
 
 class WeightMutation(BaseMutation):
 
-    def __init__(self, connection: Connection, pertrub_rate: float, pertrub_amount: float,
-                 weight_range: float = WEIGHT_RANGE):
+    def __init__(self, connection: Connection):
         super(WeightMutation, self).__init__()
         self.connection = connection
         number, src, weight, dst = connection.number, connection.src_number, connection.weight, connection.dst_number
 
         # Randomly choose between perturbing the weight or completely changing it.
-        if random() < pertrub_rate:
-            self.new_weight = weight + (random() * 2 - 1) * pertrub_amount
+        if random() < WEIGHT_PERTRUB_RATE:
+            self.new_weight = weight + (random() * 2 - 1) * WEIGHT_PERTRUB_AMOUNT
         else:
-            self.new_weight = random() * weight_range * 2 - weight_range
+            self.new_weight = random() * WEIGHT_RANGE * 2 - WEIGHT_RANGE
 
         # Generate mutation string.
         self.string = WEIGHT_MUTATION_STRING.format(number, src, weight, self.new_weight, dst)
@@ -74,17 +74,16 @@ class WeightMutation(BaseMutation):
 
 class BiasMutation(BaseMutation):
 
-    def __init__(self, node: NodeObject, pertrub_rate: float, pertrub_amount: float,
-                 bias_range: float = BIAS_RANGE):
+    def __init__(self, node: NodeObject):
         super(BiasMutation, self).__init__()
         self.node = node
         name, number, bias = node.name, node.number, node.bias
 
         # Randomly choose between perturbing the bias or completely changing it.
-        if random() < pertrub_rate:
-            self.new_bias = self.node.bias + (random() * 2 - 1) * pertrub_amount
+        if random() < BIAS_PERTRUB_RATE:
+            self.new_bias = self.node.bias + (random() * 2 - 1) * BIAS_PERTRUB_AMOUNT
         else:
-            self.new_bias = random() * bias_range * 2 - bias_range
+            self.new_bias = random() * BIAS_RANGE * 2 - BIAS_RANGE
 
         # Generate mutation string.
         self.string = BIAS_MUTATION_STRING.format(name, number, bias, self.new_bias)
@@ -92,12 +91,11 @@ class BiasMutation(BaseMutation):
 
 class ConnectionMutation(NumberedMutation):
 
-    def __init__(self, number: Union[int, None], source_number: Union[int, None],
-                 dst_number: Union[int, None], weight_range:float = WEIGHT_RANGE):
+    def __init__(self, number: Union[int, None], source_number: Union[int, None], dst_number: Union[int, None]):
         super(ConnectionMutation, self).__init__(number)
         self.src_number = source_number
         self.dst_number = dst_number
-        self.connection = Connection(None, self.src_number, self.dst_number, weight_range)
+        self.connection = Connection(None, self.src_number, self.dst_number)
         self.set_string()
 
     def set_string(self) -> None:
@@ -127,10 +125,10 @@ class NodeMutation(NumberedMutation):
         # src-dst_conn->new_node->src_conn->dst
         # Connection that has new_node as DST.
         self.new_node = HiddenNode(None, BIAS_RANGE)
-        self.new_dst_connection = Connection(None, old_src, self.new_node.number, weight=1)
+        self.new_dst_connection = Connection(None, old_src, self.new_node.number, 1)
 
         # Connection that has new_node as SRC.
-        self.new_src_connection = Connection(None, self.new_node.number, old_dst, weight=old_weight)
+        self.new_src_connection = Connection(None, self.new_node.number, old_dst, old_weight)
         self.set_string()
 
     def set_string(self) -> None:
