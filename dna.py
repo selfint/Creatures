@@ -28,12 +28,12 @@ class Dna:
             if nodes else outputs
 
         # Generate nodes if not given any.
-        self.nodes = nodes if nodes is not None else self.generate_nodes()
+        self.nodes = nodes or self.generate_nodes()
         self.input_nodes = self.get_node_by_type(InputNode)
         self.output_nodes = self.get_node_by_type(OutputNode)
 
         # Generate connections if not given any.
-        self.connections = connections if connections is not None else self.connect_nodes()
+        self.connections = connections or self.connect_nodes()
         self.update_connections()
 
     def update_connections(self) -> None:
@@ -125,12 +125,10 @@ class Dna:
         for mutation in mutations:
 
             if type(mutation) is WeightMutation:
-                connection_number = mutation.number
-                self.connections[connection_number].weight = mutation.new_weight
+                mutation.connection.weight = mutation.new_weight
 
             elif type(mutation) is BiasMutation:
-                node_number = mutation.number
-                self.nodes[node_number].bias = mutation.new_bias
+                mutation.node.bias = mutation.new_bias
 
             elif type(mutation) is ConnectionMutation:
                 new_connection = mutation.connection

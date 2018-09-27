@@ -14,7 +14,7 @@ from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_
     CONNECTION_MUTATION_RATE, NODE_MUTATION_RATE
 # Objects
 from creature import Creature
-from functions import clamp
+from functions import clamp, split_by_type, flatten
 from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, NumberedMutation, BaseMutation
 
 
@@ -179,9 +179,9 @@ class Simulation:
         mutations = []
 
         # Weight and bias mutations.
-        if random() < WEIGHT_MUTATION_RATE:
+        if random() < WEIGHT_MUTATION_RATE and creature.dna.connections:
             mutations.append(self.weight_mutation(creature))
-        if random() < BIAS_MUTATION_RATE:
+        if random() < BIAS_MUTATION_RATE and creature.dna.nodes:
             mutations.append(self.bias_mutation(creature))
 
         # Check if a connection is possible if random wants to mutate a connection.
@@ -189,7 +189,7 @@ class Simulation:
             mutations.append(self.connection_mutation(creature))
 
         # Node mutation.
-        if random() < NODE_MUTATION_RATE:
+        if random() < NODE_MUTATION_RATE and creature.dna.connections:
             mutations.append(self.node_mutation(creature))
 
         return mutations
@@ -200,6 +200,36 @@ class Simulation:
         """
         creature.update(mutations)
 
+    def simplify_mutations(self, mutations: List[NumberedMutation]):
+        """
+        Simplifies all connection and node mutations to their identifying values.
+        """
+        typed_mutations = split_by_type(mutations)
+
+        # Get simplified connection and node mutations.
+        simple_mutations = dict()
+        if ConnectionMutation in typed_mutations:
+            simple_connections = dict()
+            for conn_mutation in typed_mutations[ConnectionMutation]:
+                path = (conn_mutation.src_number, conn_mutation.dst_number)
+                if path in simple_connections:
+                    simple_connections[path].append(conn_mutation)
+                else:
+                    simple_connections[path] = [conn_mutation]
+            simple_mutations[ConnectionMutation] = simple_connections
+
+        if NodeMutation in typed_mutations:
+            simple_nodes = dict()
+            for node_mutation in typed_mutations[NodeMutation]:
+                split_number = node_mutation.connection_number
+                if split_number in simple_nodes:
+                    simple_nodes[split_number].append(node_mutation)
+                else:
+                    simple_nodes[split_number] = [node_mutation]
+            simple_mutations[NodeMutation] = simple_nodes
+
+        return simple_mutations
+
     def generate_mutations(self, creatures: List[Creature]) -> Dict[Creature, List[Union[BaseMutation,
                                                                                          NumberedMutation]]]:
         """
@@ -207,14 +237,18 @@ class Simulation:
         :return: All mutations for each creature.
         """
 
+        # Generate mutations.
+        creature_mutations = {creature: self.mutate(creature) for creature in creatures}
+        mutations = list(creature_mutations.values())
+        simplified_mutations = self.simplify_mutations(flatten(mutations))
+        print(simplified_mutations)
+        # Configure mutations.
+
+        return creature_mutations
+
+
 if __name__ == '__main__':
     s = Simulation(2, 2, 5)
     c1, c2 = s.population.keys()
     ci1, ci2 = s.population.values()
-    print(s.info_to_vec(ci1, ci2))
-    print(c1.think(CreatureNetworkInput(100, 100)))
-    for _ in range(5):
-        mutations = s.mutate(c1)
-        s.apply_mutations(c1, mutations)
-        print(mutations)
-    print(c1.think(CreatureNetworkInput(100, 100)))
+    s.generate_mutations(list(s.population))
