@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Type, List
+from typing import Dict, Tuple, Type, List, Union
 
 # Constants
 from Constants.constants import DNA_STRING
@@ -12,7 +12,7 @@ from Constants.types import NodeObject
 # Objects
 from connection import Connection
 from functions import dict_string
-from mutations import BaseMutation, WeightMutation, BiasMutation, ConnectionMutation, NodeMutation
+from mutations import BaseMutation, NumberedMutation, WeightMutation, BiasMutation, ConnectionMutation, NodeMutation
 from node import InputNode, HiddenNode, OutputNode
 
 
@@ -34,6 +34,12 @@ class Dna:
 
         # Generate connections if not given any.
         self.connections = connections if connections is not None else self.connect_nodes()
+        self.update_connections()
+
+    def update_connections(self) -> None:
+        """
+        Generates a dictionary mapping nodes to all their connections.
+        """
         self.node_connections = {node: self.get_node_connections(node) for node in self.nodes.values()}
 
     def __str__(self):
@@ -112,11 +118,34 @@ class Dna:
 
         return {'src': src, 'dst': dst}
 
-    def update(self, mutations: List[BaseMutation]) -> None:
+    def update(self, mutations: List[Union[WeightMutation, BiasMutation, ConnectionMutation, NodeMutation]]) -> None:
         """
-        Applies all mutations.
+        Applies all mutations, assumes all mutations have been configured.
         """
-        # TODO 9/26/2018 update: Add a dictionary that maps each mutation and what attributes it updates.
+        for mutation in mutations:
+
+            if type(mutation) is WeightMutation:
+                connection_number = mutation.number
+                self.connections[connection_number].weight = mutation.new_weight
+
+            elif type(mutation) is BiasMutation:
+                node_number = mutation.number
+                self.nodes[node_number].bias = mutation.new_bias
+
+            elif type(mutation) is ConnectionMutation:
+                new_connection = mutation.connection
+                self.connections[new_connection.number] = new_connection
+
+            elif type(mutation) is NodeMutation:
+                split_connection = mutation.old_connection
+                split_connection.enabled = False
+
+                self.nodes[mutation.new_node.number] = mutation.new_node
+                self.connections[mutation.new_dst_connection.number] = mutation.new_dst_connection
+                self.connections[mutation.new_src_connection.number] = mutation.new_src_connection
+
+        # Re-map all nodes and connections.
+        self.update_connections()
 
 
 if __name__ == '__main__':

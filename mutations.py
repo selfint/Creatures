@@ -5,7 +5,7 @@
 # Imports
 from abc import ABC, abstractmethod
 from random import random
-from typing import Union, List
+from typing import Union, Dict, Tuple
 
 # Constants
 from Constants.constants import NUMBERED_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, \
@@ -28,12 +28,6 @@ class BaseMutation(ABC):
 
     def __repr__(self):
         return str(self)
-
-    @abstractmethod
-    def fields(self) -> List[str]:
-        """
-        Returns all fields this mutation updates.
-        """
 
 
 class NumberedMutation(ABC):
@@ -62,19 +56,15 @@ class NumberedMutation(ABC):
         Sets the numbers for dst connection, new node and src connection.
         """
 
-    @abstractmethod
-    def fields(self) -> List[str]:
-        """
-        Returns all fields this mutation updates.
-        :return:
-        """
-
 
 class WeightMutation(BaseMutation):
 
     def __init__(self, connection: Connection):
         super(WeightMutation, self).__init__()
         self.connection = connection
+
+        # Number of the CONNECTION this mutation updates, not the number of the mutation itself.
+        self.number = connection.number
         number, src, weight, dst = connection.number, connection.src_number, connection.weight, connection.dst_number
 
         # Randomly choose between perturbing the weight or completely changing it.
@@ -86,9 +76,6 @@ class WeightMutation(BaseMutation):
         # Generate mutation string.
         self.string = WEIGHT_MUTATION_STRING.format(number, src, weight, self.new_weight, dst)
 
-    def fields(self):
-        return {'changed': self.connection, 'new_fields': {'weight': self.new_weight}}
-
 
 class BiasMutation(BaseMutation):
 
@@ -96,6 +83,9 @@ class BiasMutation(BaseMutation):
         super(BiasMutation, self).__init__()
         self.node = node
         name, number, bias = node.name, node.number, node.bias
+
+        # Number of the NODE this mutation updates, not the number of the mutation itself.
+        self.number = node.number
 
         # Randomly choose between perturbing the bias or completely changing it.
         if random() < BIAS_PERTRUB_RATE:
@@ -133,7 +123,6 @@ class NodeMutation(NumberedMutation):
         self.old_connection = connection
 
         # Disable connection that is being split.
-        self.old_connection.enabled = False
         old_src, old_dst, old_weight = connection.src_number, connection.dst_number, connection.weight
 
         # The number of the connection this node split, will be used to identify identical node mutations.

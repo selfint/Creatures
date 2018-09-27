@@ -40,4 +40,4 @@ def clamp(value: float, x_min: float, x_max: float) -> float:
 if __name__ == '__main__':
     a = {'a': 1, 'b': 2, 'c': [1, 2]}
     print_dict(a)
-    print(dict_string(a))
+    print(clamp(10, 0, 3))

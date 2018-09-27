@@ -3,15 +3,14 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import List
+from typing import List, Union
 
 # Constants
 from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutput
-from Constants.neat_parameters import WEIGHT_RANGE
 from Constants.types import COLOR
 # Objects
 from dna import Dna
-from mutations import BaseMutation
+from mutations import BaseMutation, NumberedMutation
 from network import Network
 
 
@@ -45,7 +44,7 @@ class Creature:
         """
         return CreatureNetworkOutput(*self.network.get_output(list(inputs)))
 
-    def update(self, mutations: List[BaseMutation]):
+    def update(self, mutations: List[Union[BaseMutation, NumberedMutation]]):
         self.dna.update(mutations)
         self.network = Network(self.dna.nodes, self.dna.node_connections)
 

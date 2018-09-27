@@ -4,7 +4,7 @@
 
 # Imports
 from random import randint, choice, random
-from typing import List
+from typing import List, Union, Dict
 
 # Constants
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS, SPEED_SCALING
@@ -26,6 +26,8 @@ class Simulation:
         self.population = dict()
         self.world_width = width
         self.world_height = height
+        self.connection_count = creature_inputs * creature_outputs - 1
+        self.node_count = creature_inputs + creature_outputs - 1
 
         # All attributes that can be changed in creature info
         self.creature_actions = 'x', 'y'
@@ -170,7 +172,7 @@ class Simulation:
         mutation = NodeMutation(None, connection)
         return mutation
 
-    def mutate(self, creature: Creature) -> List[BaseMutation]:
+    def mutate(self, creature: Creature) -> List[Union[BaseMutation, NumberedMutation]]:
         """
         Get mutations based on the creature, based on random chance and neat_parameter values.
         """
@@ -196,16 +198,23 @@ class Simulation:
         """
         Applies mutation to creature's dna.
         """
+        creature.update(mutations)
 
-        for mutation in mutations:
-            creature.update(mutation)
-
+    def generate_mutations(self, creatures: List[Creature]) -> Dict[Creature, List[Union[BaseMutation,
+                                                                                         NumberedMutation]]]:
+        """
+        Generates mutations for all new creatures, and configures them.
+        :return: All mutations for each creature.
+        """
 
 if __name__ == '__main__':
-    s = Simulation(2, 2, 4)
+    s = Simulation(2, 2, 5)
     c1, c2 = s.population.keys()
     ci1, ci2 = s.population.values()
     print(s.info_to_vec(ci1, ci2))
-    for x in s.mutate(c1):
-        print(x)
-    # print(c1.dna)
+    print(c1.think(CreatureNetworkInput(100, 100)))
+    for _ in range(5):
+        mutations = s.mutate(c1)
+        s.apply_mutations(c1, mutations)
+        print(mutations)
+    print(c1.think(CreatureNetworkInput(100, 100)))
