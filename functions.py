@@ -1,6 +1,8 @@
 # functions.py
 # Description: functions.
 # ---------------------------------------------------------------------------------------------------------------------
+from typing import List, Dict
+
 
 def print_dict(dictionary: dict):
     for key, value in dictionary.items():
@@ -36,6 +38,21 @@ def clamp(value: float, x_min: float, x_max: float) -> float:
     Clamps a value between a min and a max.
     """
     return max(x_min, min(value, x_max))
+
+def split_by_type(array: list) -> Dict[type, list]:
+    types = dict()
+    for element in array:
+        if type(element) in types:
+            types[type(element)].append(element)
+        else:
+            types[type(element)] = [element]
+    return types
+
+def flatten(double_array: List[list]) -> list:
+    """
+    Turns 2d array into 1d array.
+    """
+    return [element for array in double_array for element in array]
 
 if __name__ == '__main__':
     a = {'a': 1, 'b': 2, 'c': [1, 2]}
