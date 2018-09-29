@@ -3,16 +3,17 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from typing import Dict, Tuple, Type, List, Union
+from typing import Dict, Tuple, Type, List
 
 # Constants
 from Constants.constants import DNA_STRING
-from Constants.neat_parameters import BIAS_RANGE, WEIGHT_RANGE
+from Constants.neat_parameters import BIAS_RANGE
 from Constants.types import NodeObject
 # Objects
 from connection import Connection
 from functions import dict_string
-from mutations import BaseMutation, NumberedMutation, WeightMutation, BiasMutation, ConnectionMutation, NodeMutation
+from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, \
+    MutationObject
 from node import InputNode, HiddenNode, OutputNode
 
 
@@ -104,7 +105,7 @@ class Dna:
         connections = []
         for src in self.input_nodes:
             for dst in self.output_nodes:
-                connections.append(Connection(len(connections), src.number, dst.number, WEIGHT_RANGE))
+                connections.append(Connection(len(connections), src.number, dst.number))
 
         return {connection.number: connection for connection in connections}
 
@@ -118,7 +119,7 @@ class Dna:
 
         return {'src': src, 'dst': dst}
 
-    def update(self, mutations: List[Union[WeightMutation, BiasMutation, ConnectionMutation, NodeMutation]]) -> None:
+    def update(self, mutations: List[MutationObject]) -> None:
         """
         Applies all mutations, assumes all mutations have been configured.
         """

@@ -22,6 +22,7 @@ NUMBERED_MUTATION_STRING = "<{} ###{}:: {}>"
 WEIGHT_MUTATION_STRING = "<Connection ##{}: #{} -({:.2f} => {:.2f})-> #{}>"
 BIAS_MUTATION_STRING = "<{} #{} bias: {:.3f} => {:.3f}>"
 NODE_MUTATION_STRING = "< Split: {} | Src: {} | Node: {} | dst: {} >"
+CREATURE_STRING = ""
 
 # Graphics.
 CAPTION = 'Creatures'

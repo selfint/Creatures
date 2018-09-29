@@ -9,13 +9,12 @@ from typing import List, Union, Dict
 # Constants
 from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS, SPEED_SCALING
 from Constants.data_structures import CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput, CreatureActions
-from Constants.neat_parameters import WEIGHT_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_PERTRUB_AMOUNT, \
-    BIAS_RANGE, BIAS_PERTRUB_RATE, BIAS_PERTRUB_AMOUNT, WEIGHT_MUTATION_RATE, BIAS_MUTATION_RATE, \
-    CONNECTION_MUTATION_RATE, NODE_MUTATION_RATE
+from Constants.neat_parameters import WEIGHT_MUTATION_RATE, BIAS_MUTATION_RATE, \
+    CONNECTION_MUTATION_RATE, NODE_MUTATION_RATE, CREATURE_OUTPUTS, CREATURE_INPUTS
 # Objects
 from creature import Creature
 from functions import clamp, split_by_type, flatten
-from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, NumberedMutation, BaseMutation
+from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, NumberedMutation, BaseMutation, MutationObject
 
 
 class Simulation:
@@ -26,8 +25,8 @@ class Simulation:
         self.population = dict()
         self.world_width = width
         self.world_height = height
-        self.connection_count = creature_inputs * creature_outputs - 1
         self.node_count = creature_inputs + creature_outputs - 1
+        self.connection_count = creature_inputs * creature_outputs - 1
 
         # All attributes that can be changed in creature info
         self.creature_actions = 'x', 'y'
@@ -43,6 +42,14 @@ class Simulation:
             creature = Creature(creature_inputs, creature_outputs, colors=[primary, secondary], name=str(i))
             creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
             self.population[creature] = creature_info
+
+        # Add all connections to mutation history.
+        self.mutation_history = []
+        self.connection_count = 0
+        temp = list(self.population.keys())[0]
+        connections = temp.dna.connections.values()
+        for conn in connections:
+            self.mutation_history.append(ConnectionMutation(connection=conn))
 
         # Add all object in the world and their info into the world info dictionary.
         self.world_info = self.population
@@ -194,44 +201,23 @@ class Simulation:
 
         return mutations
 
-    def apply_mutations(self, creature: Creature, mutations: List[BaseMutation]) -> None:
+    def apply_mutations(self, creature: Creature, mutations: List[MutationObject]) -> None:
         """
         Applies mutation to creature's dna.
         """
         creature.update(mutations)
 
-    def simplify_mutations(self, mutations: List[NumberedMutation]):
+    def new_creatures(self, amount: int) -> List[Creature]:
         """
-        Simplifies all connection and node mutations to their identifying values.
+        Generate new creatures.
         """
-        typed_mutations = split_by_type(mutations)
+        children = [self.new_child() for _ in range(amount)]
+        children_mutations = self.generate_mutations(children)
+        for child in children:
+            self.apply_mutations(child, children_mutations[child])
+        return children
 
-        # Get simplified connection and node mutations.
-        simple_mutations = dict()
-        if ConnectionMutation in typed_mutations:
-            simple_connections = dict()
-            for conn_mutation in typed_mutations[ConnectionMutation]:
-                path = (conn_mutation.src_number, conn_mutation.dst_number)
-                if path in simple_connections:
-                    simple_connections[path].append(conn_mutation)
-                else:
-                    simple_connections[path] = [conn_mutation]
-            simple_mutations[ConnectionMutation] = simple_connections
-
-        if NodeMutation in typed_mutations:
-            simple_nodes = dict()
-            for node_mutation in typed_mutations[NodeMutation]:
-                split_number = node_mutation.connection_number
-                if split_number in simple_nodes:
-                    simple_nodes[split_number].append(node_mutation)
-                else:
-                    simple_nodes[split_number] = [node_mutation]
-            simple_mutations[NodeMutation] = simple_nodes
-
-        return simple_mutations
-
-    def generate_mutations(self, creatures: List[Creature]) -> Dict[Creature, List[Union[BaseMutation,
-                                                                                         NumberedMutation]]]:
+    def generate_mutations(self, creatures: List[Creature]) -> Dict[Creature, List[MutationObject]]:
         """
         Generates mutations for all new creatures, and configures them.
         :return: All mutations for each creature.
@@ -239,16 +225,32 @@ class Simulation:
 
         # Generate mutations.
         creature_mutations = {creature: self.mutate(creature) for creature in creatures}
-        mutations = list(creature_mutations.values())
-        simplified_mutations = self.simplify_mutations(flatten(mutations))
-        print(simplified_mutations)
+        mutations = flatten(list(creature_mutations.values()))
+        numbered_mutations = [mutation for mutation in mutations if isinstance(mutation, NumberedMutation)]
+
         # Configure mutations.
+        for mutation in numbered_mutations:
+            for past_mutation in self.mutation_history:
+                if mutation.unique() == past_mutation.unique():
+                    mutation.configure(past_mutation.configurations())
+                    break
+            # If no mutations were matching in past mutations.
+            else:
+                self.connection_count, self.node_count = mutation.calc_configurations(self.connection_count,
+                                                                                      self.node_count)
 
         return creature_mutations
+
+    def new_child(self) -> Creature:
+        """
+        Generate a new creature. Add call to crossover here.
+        """
+        child = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS)
+        return child
 
 
 if __name__ == '__main__':
     s = Simulation(2, 2, 5)
     c1, c2 = s.population.keys()
     ci1, ci2 = s.population.values()
-    s.generate_mutations(list(s.population))
+    print(s.new_creatures(5))

@@ -10,7 +10,7 @@ from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutpu
 from Constants.types import COLOR
 # Objects
 from dna import Dna
-from mutations import BaseMutation, NumberedMutation
+from mutations import MutationObject
 from network import Network
 
 
@@ -36,6 +36,9 @@ class Creature:
         self.colors = colors
         self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
 
+    def __str__(self):
+        return CREATURE_STRING.format()
+
     def think(self, inputs: CreatureNetworkInput) -> CreatureNetworkOutput:
         """
         Gets the creature decision based on the inputs it was given.
@@ -44,7 +47,7 @@ class Creature:
         """
         return CreatureNetworkOutput(*self.network.get_output(list(inputs)))
 
-    def update(self, mutations: List[Union[BaseMutation, NumberedMutation]]):
+    def update(self, mutations: List[Union[MutationObject]]):
         self.dna.update(mutations)
         self.network = Network(self.dna.nodes, self.dna.node_connections)
 

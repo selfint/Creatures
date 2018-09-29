@@ -5,7 +5,7 @@
 # Imports
 from abc import ABC, abstractmethod
 from random import random
-from typing import Union, Dict, Tuple
+from typing import Union, List
 
 # Constants
 from Constants.constants import NUMBERED_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, \
@@ -56,6 +56,24 @@ class NumberedMutation(ABC):
         Sets the numbers for dst connection, new node and src connection.
         """
 
+    @abstractmethod
+    def calc_configurations(self, connection_count: int, node_count: int) -> List[int]:
+        """
+        Receives connection count and node count
+        """
+
+    @abstractmethod
+    def unique(self) -> list:
+        """
+        Returns identifying information, not including mutation number.
+        """
+
+    @abstractmethod
+    def configurations(self) -> tuple:
+        """
+        Returns all values that configure the mutation.
+        """
+
 
 class WeightMutation(BaseMutation):
 
@@ -99,11 +117,13 @@ class BiasMutation(BaseMutation):
 
 class ConnectionMutation(NumberedMutation):
 
-    def __init__(self, number: Union[int, None], source_number: Union[int, None], dst_number: Union[int, None]):
+    def __init__(self, number: Union[int, None] = None, source_number: Union[int, None] = None,
+                 dst_number: Union[int, None] = None, connection: Union[Connection, None] = None):
         super(ConnectionMutation, self).__init__(number)
-        self.src_number = source_number
-        self.dst_number = dst_number
-        self.connection = Connection(None, self.src_number, self.dst_number)
+        self.number = number if not connection else connection.number
+        self.src_number = source_number if not connection else connection.src_number
+        self.dst_number = dst_number if not connection else connection.dst_number
+        self.connection = connection or Connection(None, self.src_number, self.dst_number)
         self.set_string()
 
     def set_string(self) -> None:
@@ -114,6 +134,16 @@ class ConnectionMutation(NumberedMutation):
         self.src_number = src_number or self.src_number
         self.dst_number = dst_number or self.dst_number
         self.set_string()
+
+    def calc_configurations(self, connection_count:int, node_count: int):
+        self.configure(connection_count + 1)
+        return connection_count + 1, node_count
+
+    def unique(self):
+        return self.src_number, self.dst_number
+
+    def configurations(self):
+        return self.number, self.src_number, self.dst_number
 
 
 class NodeMutation(NumberedMutation):
@@ -153,3 +183,14 @@ class NodeMutation(NumberedMutation):
         self.new_src_connection.number = src_connection_number
         self.set_string()
 
+    def calc_configurations(self, connection_count: int, node_count: int):
+        self.configure(connection_count + 1, node_count + 1, connection_count + 2)
+        return connection_count + 2, node_count + 1
+
+    def unique(self):
+        return self.connection_number
+
+    def configurations(self):
+        return self.new_dst_connection.number, self.new_node.number, self.new_src_connection.number
+
+MutationObject = Union[WeightMutation, BiasMutation, ConnectionMutation, NodeMutation]
