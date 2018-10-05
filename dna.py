@@ -12,8 +12,7 @@ from Constants.types import NodeObject
 # Objects
 from connection import Connection
 from functions import dict_string
-from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, \
-    MutationObject
+from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, MutationObject
 from node import InputNode, HiddenNode, OutputNode
 
 
@@ -31,6 +30,7 @@ class Dna:
         # Generate nodes if not given any.
         self.nodes = nodes or self.generate_nodes()
         self.input_nodes = self.get_node_by_type(InputNode)
+        self.hidden = 0
         self.output_nodes = self.get_node_by_type(OutputNode)
 
         # Generate connections if not given any.
@@ -145,6 +145,7 @@ class Dna:
 
         # Re-map all nodes and connections.
         self.update_connections()
+        self.hidden = len(self.get_node_by_type(HiddenNode))
 
 
 if __name__ == '__main__':

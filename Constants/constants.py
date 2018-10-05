@@ -16,13 +16,13 @@ Output Nodes: {}
 
 # Amount of "#" meaning: 1 -> Node number, 2 -> Connection number, 3 -> Mutation number.
 CONNECTION_STRING = "<Connection ##{}({}): #{} -({:.2f})-> #{}>"
-NODE_STRING = "<{} #{} bias: {:.3f}>"
-BASE_MUTATION_STRING = "<{} :: {}"
-NUMBERED_MUTATION_STRING = "<{} ###{}:: {}>"
-WEIGHT_MUTATION_STRING = "<Connection ##{}: #{} -({:.2f} => {:.2f})-> #{}>"
-BIAS_MUTATION_STRING = "<{} #{} bias: {:.3f} => {:.3f}>"
+NODE_STRING = "< {} #{} bias: {:.3f} >"
+BASE_MUTATION_STRING = "< {} :: {} >"
+NUMBERED_MUTATION_STRING = "< {} ###{}:: {} >"
+WEIGHT_MUTATION_STRING = "< Connection ##{}: #{} -({:.2f} => {:.2f})-> #{} >"
+BIAS_MUTATION_STRING = "< {} #{} bias: {:.3f} => {:.3f} >"
 NODE_MUTATION_STRING = "< Split: {} | Src: {} | Node: {} | dst: {} >"
-CREATURE_STRING = ""
+CREATURE_STRING = "{}"
 
 # Graphics.
 CAPTION = 'Creatures'
@@ -33,7 +33,9 @@ CREATURE_COLORS = {  # Will be used to visually differentiate between species.
     'GREEN' : (0, 255, 0),
     'BLUE' : (0, 0, 255),
     'PINK': (255, 0, 255),
-    'CYAN': (0, 255, 255)
+    'CYAN': (0, 255, 255),
+    'PURPLE': (128, 0, 128),
+    'ORANGE': (200, 128, 0)
 }
 BLACK = 0, 0, 0
 GREY = 125, 125, 125

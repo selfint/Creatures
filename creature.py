@@ -6,23 +6,24 @@
 from typing import List, Union
 
 # Constants
+from Constants.constants import CREATURE_STRING
 from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutput
 from Constants.types import COLOR
 # Objects
 from dna import Dna
+from functions import generate_name
 from mutations import MutationObject
 from network import Network
 
 
 class Creature:
 
-    def __init__(self, inputs: int = None, outputs: int = None, colors: List[COLOR] = None, dna: Dna = None,
-                 name='Creature'):
+    def __init__(self, inputs: int = None, outputs: int = None, colors: List[COLOR] = None, dna: Dna = None):
 
         # Take dna inputs & outputs if dna is given, else take values.
         self.inputs = dna.inputs if dna is not None else inputs
         self.outputs = dna.outputs if dna is not None else outputs
-        self.name = name
+        self.name = generate_name()
 
         self.dna = dna if dna is not None else Dna(self.inputs, self.outputs)
         self.network = Network(self.dna.nodes, self.dna.node_connections)
@@ -37,7 +38,10 @@ class Creature:
         self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
 
     def __str__(self):
-        return CREATURE_STRING.format()
+        return CREATURE_STRING.format(self.name)
+
+    def __repr__(self):
+        return str(self)
 
     def think(self, inputs: CreatureNetworkInput) -> CreatureNetworkOutput:
         """

@@ -14,7 +14,7 @@ from simulation import Simulation
 
 # Run simulation.
 if __name__ == '__main__':
-    simulation = Simulation(POPULATION_SIZE, CREATURE_INPUTS, CREATURE_OUTPUTS)
+    simulation = Simulation(POPULATION_SIZE, WIDTH, HEIGHT)
     graphics = Graphics(simulation, WIDTH, HEIGHT, CAPTION)
     graphics.run()
     sys.exit(1)
