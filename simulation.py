@@ -3,30 +3,30 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-from random import randint, choice, random
-from typing import List, Union, Dict
+from random import choice, randint, random
+from typing import Dict, List, Union
 
 # Constants
-from Constants.constants import WIDTH, HEIGHT, CREATURE_COLORS, SPEED_SCALING
-from Constants.data_structures import CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput, CreatureActions
-from Constants.neat_parameters import WEIGHT_MUTATION_RATE, BIAS_MUTATION_RATE, \
-    CONNECTION_MUTATION_RATE, NODE_MUTATION_RATE, CREATURE_OUTPUTS, CREATURE_INPUTS
+from Constants.constants import CREATURE_COLORS, HEIGHT, SPEED_SCALING, WIDTH
+from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
+from Constants.neat_parameters import BIAS_MUTATION_RATE, CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, \
+    DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
-from functions import clamp, split_by_type, flatten
-from mutations import WeightMutation, BiasMutation, ConnectionMutation, NodeMutation, NumberedMutation, BaseMutation, MutationObject
+from functions import clamp, flatten
+from mutations import BaseMutation, BiasMutation, ConnectionMutation, MutationObject, NodeMutation, NumberedMutation, \
+    WeightMutation
 
 
 class Simulation:
 
-    def __init__(self, population_size: int, creature_inputs: int, creature_outputs: int,
-                 width: int = WIDTH, height: int = HEIGHT):
+    def __init__(self, population_size: int, width: int = WIDTH, height: int = HEIGHT):
         self.population_size = population_size
         self.population = dict()
         self.world_width = width
         self.world_height = height
-        self.node_count = creature_inputs + creature_outputs - 1
-        self.connection_count = creature_inputs * creature_outputs - 1
+        self.node_count = CREATURE_INPUTS + CREATURE_OUTPUTS - 1
+        self.connection_count = CREATURE_INPUTS * CREATURE_OUTPUTS - 1
 
         # All attributes that can be changed in creature info
         self.creature_actions = 'x', 'y'
@@ -39,7 +39,7 @@ class Simulation:
             secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
 
             # Generate creature and creature info.
-            creature = Creature(creature_inputs, creature_outputs, colors=[primary, secondary], name=str(i))
+            creature = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS, colors=[primary, secondary])
             creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
             self.population[creature] = creature_info
 
@@ -248,9 +248,14 @@ class Simulation:
         child = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS)
         return child
 
+    def genetic_distance(self, creature_a: Creature, creature_b: Creature) -> float:
+        """
+        Returns a float between 0 and 1, shows how similar two creatures are.
+        """
+        c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
+
+
 
 if __name__ == '__main__':
     s = Simulation(2, 2, 5)
-    c1, c2 = s.population.keys()
-    ci1, ci2 = s.population.values()
     print(s.new_creatures(5))

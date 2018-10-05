@@ -3,18 +3,13 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
-import math
 import random
 from abc import ABC, abstractmethod
 from typing import Callable, List, Union
 
 # Constants
 from Constants.constants import NODE_STRING
-
-
-# Activation function
-def sigmoid(x: float) -> float:
-    return 1.0 / (1.0 + pow(math.e, -x))
+from Constants.neat_parameters import sigmoid
 
 
 class BaseNode(ABC):

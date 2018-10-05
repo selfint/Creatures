@@ -2,6 +2,13 @@
 # Description: neat algorithm configurations.
 # ---------------------------------------------------------------------------------------------------------------------
 
+
+# Activation function
+import math
+def sigmoid(x: float) -> float:
+    return 1.0 / (1.0 + pow(math.e, -4.9 * x))
+
+
 # General
 POPULATION_SIZE = 2
 CREATURE_INPUTS = 2
@@ -24,4 +31,9 @@ CONNECTION_MUTATION_RATE = 1
 
 # Node
 NODE_MUTATION_RATE = 1
+
+# Genetic Distance
+EXCESS_CONSTANT = 1.0
+DISJOINT_CONSTANT = 1.0
+DELTA_WEIGHT_CONSTANT = 0.4
 
