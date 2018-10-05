@@ -2,6 +2,7 @@
 # Description: functions.
 # ---------------------------------------------------------------------------------------------------------------------
 from typing import List, Dict
+from random import gauss, random, choice, randint
 
 
 def print_dict(dictionary: dict):
@@ -54,7 +55,30 @@ def flatten(double_array: List[list]) -> list:
     """
     return [element for array in double_array for element in array]
 
+def generate_name() -> str:
+    """
+    Generates a random name.
+    """
+
+    constants = "qwrtypsdfghjklzxcvbnm"
+    vowels = "aeiou"
+    name_length = round(gauss(4, 0.75))
+    name = ""
+    sets = constants, vowels
+    current_set = randint(0, 1)
+    for letter in range(name_length):
+        next_letter = choice(sets[current_set])
+        if next_letter != 'q':
+            name += next_letter
+            current_set = 1 - current_set
+        else:
+            name += 'qu'
+
+    return name.capitalize()
+
+
 if __name__ == '__main__':
     a = {'a': 1, 'b': 2, 'c': [1, 2]}
     print_dict(a)
     print(clamp(10, 0, 3))
+    print(generate_name())
