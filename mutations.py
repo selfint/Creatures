@@ -17,7 +17,7 @@ from connection import Connection
 from node import HiddenNode
 
 
-class BaseMutation(ABC):
+class Mutation(ABC):
 
     def __init__(self):
         self.name = self.__class__.__name__
@@ -30,11 +30,11 @@ class BaseMutation(ABC):
         return str(self)
 
 
-class NumberedMutation(ABC):
+class Innovation(ABC):
 
-    def __init__(self, number: Union[int, None]):
-        super(NumberedMutation, self).__init__()
-        self.number = number
+    def __init__(self):
+        super(Innovation, self).__init__()
+        self.number = None
         self.name = self.__class__.__name__
         self.string = ''
 
@@ -75,7 +75,7 @@ class NumberedMutation(ABC):
         """
 
 
-class WeightMutation(BaseMutation):
+class WeightMutation(Mutation):
 
     def __init__(self, connection: Connection):
         super(WeightMutation, self).__init__()
@@ -95,7 +95,7 @@ class WeightMutation(BaseMutation):
         self.string = WEIGHT_MUTATION_STRING.format(number, src, weight, self.new_weight, dst)
 
 
-class BiasMutation(BaseMutation):
+class BiasMutation(Mutation):
 
     def __init__(self, node: NodeObject):
         super(BiasMutation, self).__init__()
@@ -115,24 +115,25 @@ class BiasMutation(BaseMutation):
         self.string = BIAS_MUTATION_STRING.format(name, number, bias, self.new_bias)
 
 
-class ConnectionMutation(NumberedMutation):
+class ConnectionMutation(Innovation):
 
     def __init__(self, number: Union[int, None] = None, source_number: Union[int, None] = None,
                  dst_number: Union[int, None] = None, connection: Union[Connection, None] = None):
-        super(ConnectionMutation, self).__init__(number)
+        super(ConnectionMutation, self).__init__()
+
+        # Number can be None, but src and dst must be a number.
         self.number = number if not connection else connection.number
-        self.src_number = source_number if not connection else connection.src_number
-        self.dst_number = dst_number if not connection else connection.dst_number
+        self.src_number = source_number or connection.src_number
+        self.dst_number = dst_number or connection.dst_number
         self.connection = connection or Connection(None, self.src_number, self.dst_number)
         self.set_string()
 
     def set_string(self) -> None:
         self.string = str(self.connection)
 
-    def configure(self, number: int = None, src_number: int = None, dst_number: int = None) -> None:
+    def configure(self, number: int) -> None:
         self.number = number or self.number
-        self.src_number = src_number or self.src_number
-        self.dst_number = dst_number or self.dst_number
+        self.connection.number = number or self.number
         self.set_string()
 
     def calc_configurations(self, connection_count:int, node_count: int):
@@ -146,10 +147,11 @@ class ConnectionMutation(NumberedMutation):
         return self.number, self.src_number, self.dst_number
 
 
-class NodeMutation(NumberedMutation):
+class NodeMutation(Innovation):
 
-    def __init__(self, number: Union[int, None], connection: Connection):
-        super(NodeMutation, self).__init__(number)
+    def __init__(self, connection: Connection):
+        super(NodeMutation, self).__init__()
+        self.number = connection.number
         self.old_connection = connection
 
         # Disable connection that is being split.

@@ -28,6 +28,7 @@ CREATURE_STRING = "{}"
 CAPTION = 'Creatures'
 WIDTH, HEIGHT = 800, 600
 SPEED_SCALING = 0.1
+CREATURE_SCALE = 0.2
 CREATURE_COLORS = {  # Will be used to visually differentiate between species.
     'RED' : (255, 0, 0),
     'GREEN' : (0, 255, 0),

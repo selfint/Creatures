@@ -62,7 +62,7 @@ def generate_name() -> str:
 
     constants = "qwrtypsdfghjklzxcvbnm"
     vowels = "aeiou"
-    name_length = round(gauss(4, 0.75))
+    name_length = round(gauss(6, 2))
     name = ""
     sets = constants, vowels
     current_set = randint(0, 1)
@@ -78,7 +78,7 @@ def generate_name() -> str:
 
 
 if __name__ == '__main__':
-    a = {'a': 1, 'b': 2, 'c': [1, 2]}
-    print_dict(a)
-    print(clamp(10, 0, 3))
+    # a = {'a': 1, 'b': 2, 'c': [1, 2]}
+    # print_dict(a)
+    # print(clamp(10, 0, 3))
     print(generate_name())

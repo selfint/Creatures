@@ -16,7 +16,7 @@ class CreatureInfo:
         self.scale = scale
 
     def __str__(self):
-        return "{}{}".format(self.__class__.__name__, (self.x, self.y, self.scale))
+        return "{}(x={}, y={}, scale={})".format(self.__class__.__name__, self.x, self.y, self.scale)
 
     def __repr__(self):
         return str(self)

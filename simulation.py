@@ -4,29 +4,32 @@
 
 # Imports
 from random import choice, randint, random
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 # Constants
-from Constants.constants import CREATURE_COLORS, HEIGHT, SPEED_SCALING, WIDTH
+from Constants.constants import CREATURE_COLORS, HEIGHT, SPEED_SCALING, WIDTH, CREATURE_SCALE
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BIAS_MUTATION_RATE, CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, \
     DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
 from functions import clamp, flatten
-from mutations import BaseMutation, BiasMutation, ConnectionMutation, MutationObject, NodeMutation, NumberedMutation, \
+from mutations import Mutation, BiasMutation, ConnectionMutation, MutationObject, NodeMutation, Innovation, \
     WeightMutation
 
 
 class Simulation:
 
-    def __init__(self, population_size: int, width: int = WIDTH, height: int = HEIGHT):
+    def __init__(self, population_size: int):
+        if population_size < 1:
+            raise ValueError('Population size must be at least 1')
         self.population_size = population_size
         self.population = dict()
-        self.world_width = width
-        self.world_height = height
+        self.world_width = WIDTH
+        self.world_height = HEIGHT
         self.node_count = CREATURE_INPUTS + CREATURE_OUTPUTS - 1
         self.connection_count = CREATURE_INPUTS * CREATURE_OUTPUTS - 1
+        self.innovation_history = []
 
         # All attributes that can be changed in creature info
         self.creature_actions = 'x', 'y'
@@ -40,16 +43,23 @@ class Simulation:
 
             # Generate creature and creature info.
             creature = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS, colors=[primary, secondary])
-            creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), 0.2)
+            creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), CREATURE_SCALE)
             self.population[creature] = creature_info
 
         # Add all connections to mutation history.
-        self.mutation_history = []
         self.connection_count = 0
         temp = list(self.population.keys())[0]
         connections = temp.dna.connections.values()
         for conn in connections:
-            self.mutation_history.append(ConnectionMutation(connection=conn))
+            self.innovation_history.append(ConnectionMutation(connection=conn))
+
+        # Generate world.
+        self.update_world()
+
+    def update_world(self) -> None:
+        """
+        Updates world_info
+        """
 
         # Add all object in the world and their info into the world info dictionary.
         self.world_info = self.population
@@ -66,6 +76,7 @@ class Simulation:
             creature_actions = self.interpret_decisions(creature_decisions)
             self.apply_action(creature, creature_actions)
         self.constrain_creatures()
+        self.update_world()
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -176,10 +187,10 @@ class Simulation:
         connection = choice(list(creature.dna.connections.values()))
 
         # Generate node mutation.
-        mutation = NodeMutation(None, connection)
+        mutation = NodeMutation(connection)
         return mutation
 
-    def mutate(self, creature: Creature) -> List[Union[BaseMutation, NumberedMutation]]:
+    def mutate(self, creature: Creature) -> List[MutationObject]:
         """
         Get mutations based on the creature, based on random chance and neat_parameter values.
         """
@@ -207,55 +218,77 @@ class Simulation:
         """
         creature.update(mutations)
 
-    def new_creatures(self, amount: int) -> List[Creature]:
+    def new_creatures(self, amount: int) -> None:
         """
-        Generate new creatures.
+        Generate new creatures, and adds them to the population.
         """
-        children = [self.new_child() for _ in range(amount)]
-        children_mutations = self.generate_mutations(children)
-        for child in children:
-            self.apply_mutations(child, children_mutations[child])
-        return children
+        for _ in range(amount):
+            child, child_info = self.new_child()
+            self.apply_mutations(child, self.generate_mutations(child))
+            self.population[child] = child_info
 
-    def generate_mutations(self, creatures: List[Creature]) -> Dict[Creature, List[MutationObject]]:
+    def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
         Generates mutations for all new creatures, and configures them.
         :return: All mutations for each creature.
         """
 
-        # Generate mutations.
-        creature_mutations = {creature: self.mutate(creature) for creature in creatures}
-        mutations = flatten(list(creature_mutations.values()))
-        numbered_mutations = [mutation for mutation in mutations if isinstance(mutation, NumberedMutation)]
+        # Generate innovations.
+        mutations = self.mutate(creature)
+        innovations = [mutation for mutation in mutations if isinstance(mutation, Innovation)]
 
-        # Configure mutations.
-        for mutation in numbered_mutations:
-            for past_mutation in self.mutation_history:
-                if mutation.unique() == past_mutation.unique():
-                    mutation.configure(past_mutation.configurations())
+        # Configure innovations.
+        for innovation in innovations:
+            for past_innovation in self.innovation_history:
+                if innovation.unique() == past_innovation.unique():
+                    innovation.configure(*past_innovation.configurations())
                     break
-            # If no mutations were matching in past mutations.
+            # If no innovations were matching in past innovations, increment connection and node count.
+            # And add innovation to innovation history.
             else:
-                self.connection_count, self.node_count = mutation.calc_configurations(self.connection_count,
+                self.connection_count, self.node_count = innovation.calc_configurations(self.connection_count,
                                                                                       self.node_count)
+                self.innovation_history.append(innovation)
+        return mutations
 
-        return creature_mutations
-
-    def new_child(self) -> Creature:
+    def new_child(self) -> Tuple[Creature, CreatureInfo]:
         """
         Generate a new creature. Add call to crossover here.
         """
-        child = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS)
-        return child
+        primary = choice(list(CREATURE_COLORS.values()))
+        secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
+
+        # Generate creature and creature info.
+        child = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS, colors=[primary, secondary])
+        child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), CREATURE_SCALE)
+        return child, child_info
 
     def genetic_distance(self, creature_a: Creature, creature_b: Creature) -> float:
         """
-        Returns a float between 0 and 1, shows how similar two creatures are.
+        Returns a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
+        similar the two creatures are.
         """
+        # Get both creatures connection genes. Reminder: Connections is a dict => {innovation number: connection}
+        a_connections = creature_a.dna.connections
+        b_connections = creature_b.dna.connections
+
+        # Check which creature has the latest innovation.
+        print(a_connections)
+        print(b_connections)
+
+        # Calculation constants.
         c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
 
+        # Excess genes.
 
 
 if __name__ == '__main__':
-    s = Simulation(2, 2, 5)
-    print(s.new_creatures(5))
+    s = Simulation(2)
+    s.new_creatures(5)
+    def rand_creature() -> Creature:
+        return choice(list(s.population))
+    for _ in range(2):
+        c = rand_creature()
+        print(c)
+        print(c.dna.nodes)
+        print('----------------')

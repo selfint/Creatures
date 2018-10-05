@@ -101,6 +101,6 @@ class Graphics:
 
 
 if __name__ == '__main__':
-    g = Graphics(Simulation(1, 2, 1), 800, 600, 'Graphics test')
+    g = Graphics(Simulation(1), 800, 600, 'Graphics test')
     g.run()
 
