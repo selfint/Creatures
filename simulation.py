@@ -17,7 +17,6 @@ from functions import clamp, flatten
 from mutations import Mutation, BiasMutation, ConnectionMutation, MutationObject, NodeMutation, Innovation, \
     WeightMutation
 
-# Test
 
 class Simulation:
 
