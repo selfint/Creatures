@@ -23,7 +23,6 @@ def ellipse(screen: object, x: float, y: float, width: float, height: float,
     Draw an anti-aliased ellipse onto the screen.
     :param stroke: Edge color of the ellipse.
     :param mode: Where to draw the ellipse from.
-    :return:
     """
 
     # Default color is GREY with BLACK stroke

@@ -61,8 +61,8 @@ def generate_name() -> str:
     """
 
     constants = "qwrtypsdfghjklzxcvbnm"
-    vowels = "aeiou"
-    name_length = round(gauss(6, 2))
+    vowels = "aaaeeeiiou"
+    name_length = round(gauss(5.5, 2))
     name = ""
     sets = constants, vowels
     current_set = randint(0, 1)

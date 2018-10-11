@@ -117,14 +117,14 @@ class BiasMutation(Mutation):
 
 class ConnectionMutation(Innovation):
 
-    def __init__(self, number: Union[int, None] = None, source_number: Union[int, None] = None,
+    def __init__(self, number: Union[int, None] = None, src_number: Union[int, None] = None,
                  dst_number: Union[int, None] = None, connection: Union[Connection, None] = None):
         super(ConnectionMutation, self).__init__()
 
         # Number can be None, but src and dst must be a number.
         self.number = number if not connection else connection.number
-        self.src_number = source_number or connection.src_number
-        self.dst_number = dst_number or connection.dst_number
+        self.src_number = src_number if not connection else connection.src_number
+        self.dst_number = dst_number if not connection else connection.dst_number
         self.connection = connection or Connection(None, self.src_number, self.dst_number)
         self.set_string()
 
@@ -144,7 +144,7 @@ class ConnectionMutation(Innovation):
         return self.src_number, self.dst_number
 
     def configurations(self):
-        return self.number, self.src_number, self.dst_number
+        return self.number,
 
 
 class NodeMutation(Innovation):
