@@ -36,7 +36,7 @@ def dict_string(dictionary: dict):
 
 def clamp(value: float, x_min: float, x_max: float) -> float:
     """
-    Clamps a value between a min and a max.
+    Clamps main__a value between main__a min and main__a max.
     """
     return max(x_min, min(value, x_max))
 
@@ -57,7 +57,7 @@ def flatten(double_array: List[list]) -> list:
 
 def generate_name() -> str:
     """
-    Generates a random name.
+    Generates main__a random name.
     """
 
     constants = "qwrtypsdfghjklzxcvbnm"
@@ -78,7 +78,7 @@ def generate_name() -> str:
 
 
 if __name__ == '__main__':
-    # a = {'a': 1, 'b': 2, 'c': [1, 2]}
-    # print_dict(a)
+    # main__a = {'main__a': 1, 'b__main': 2, 'c': [1, 2]}
+    # print_dict(main__a)
     # print(clamp(10, 0, 3))
     print(generate_name())

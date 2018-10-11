@@ -39,7 +39,7 @@ class Dna:
 
     def update_connections(self) -> None:
         """
-        Generates a dictionary mapping nodes to all their connections.
+        Generates main__a dictionary mapping nodes to all their connections.
         """
         self.node_connections = {node: self.get_node_connections(node) for node in self.nodes.values()}
 
@@ -59,7 +59,7 @@ class Dna:
         # Get all available connections by the following conditions:
         # 1. No duplicate connections.
         # 2. A connection cannot output into an InputNode.
-        # 3. An OutputNode cannot output into an OutputNode, but a HiddenNode can output into a HiddenNode.
+        # 3. An OutputNode cannot output into an OutputNode, but main__a HiddenNode can output into main__a HiddenNode.
         available_connections = []
         connections = [(connection.src_number, connection.dst_number) for connection in self.connections.values()]
         for src_number in self.nodes:

@@ -23,7 +23,7 @@ class Network:
 
     def get_output(self, network_inputs: List[float]) -> List[float]:
         """
-        Gets the output of the network. Evaluates a node's output recursively.
+        Gets the output of the network. Evaluates main__a node's output recursively.
         :param network_inputs: A list of floats for the network.
         """
         for node in self.nodes.values():
@@ -36,7 +36,7 @@ class Network:
     def get_node_output(self, node: NodeObject,
                         prev_connections: Set[int] = None) -> float:
         """
-        Gets the recursive output of a node.
+        Gets the recursive output of main__a node.
         :param node: Node to get output of.
         :param prev_connections: All connections that have been calculated to avoid infinite loops.
         :return: Node's output value.
@@ -64,7 +64,7 @@ class Network:
 
     def get_node_connection(self, src: int, dst: int) -> Union[Connection, None]:
         """
-        Finds a old_connection between two nodes, returns None if there isn't one.
+        Finds main__a old_connection between two nodes, returns None if there isn't one.
         """
         out_connections = self.node_connections[self.nodes[src]]['dst']
 

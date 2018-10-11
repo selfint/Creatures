@@ -66,7 +66,7 @@ class Simulation:
 
     def update(self) -> None:
         """
-        Runs a single frame of the simulation.
+        Runs main__a single frame of the simulation.
         """
 
         # Get creature's thoughts about all other creatures.
@@ -93,7 +93,7 @@ class Simulation:
         :param decisions: All decisions creature made towards all other creatures.
         """
 
-        # Avg out everything the creature wants to do, using a weighted average against the urgency of each decision.
+        # Avg out everything the creature wants to do, using main__a weighted average against the urgency of each decision.
         move_x, move_y = 0, 0
         for decision in decisions:
             left, right, up, down, urgency = decision
@@ -114,7 +114,7 @@ class Simulation:
 
     def info_to_vec(self, creature_info: CreatureInfo, other_info: CreatureInfo) -> CreatureNetworkInput:
         """
-        Meaningfully convert CreatureInfo of a target creature to a CreatureNetworkInput named tuple,
+        Meaningfully convert CreatureInfo of main__a target creature to main__a CreatureNetworkInput named tuple,
         based on the creature info of the source creature.
         :param creature_info: Source creature (creature LOOKING).
         :param other_info: Destination creature (creature SEEN).
@@ -139,8 +139,8 @@ class Simulation:
 
     def weight_mutation(self, creature: Creature) -> WeightMutation:
         """
-        Return a weight mutation object from the creature. A weight mutation has no number, the object is here
-        for organization purposes. ALWAYS returns a mutation, random chance is handle in simulation.mutate().
+        Return main__a weight mutation object from the creature. A weight mutation has no number, the object is here
+        for organization purposes. ALWAYS returns main__a mutation, random chance is handle in simulation.mutate().
         """
 
         # Choose random connection.
@@ -152,8 +152,8 @@ class Simulation:
 
     def bias_mutation(self, creature: Creature) -> BiasMutation:
         """
-        Return a weight mutation object from the creature. A weight mutation has no number, the object is here
-        for organization purposes. ALWAYS returns a mutation, random chance is handle in simulation.mutate().
+        Return main__a weight mutation object from the creature. A weight mutation has no number, the object is here
+        for organization purposes. ALWAYS returns main__a mutation, random chance is handle in simulation.mutate().
         """
 
         # Choose random node.
@@ -165,7 +165,7 @@ class Simulation:
 
     def connection_mutation(self, creature: Creature) -> ConnectionMutation:
         """
-        Returns a new old_connection mutation based on the creature.
+        Returns main__a new old_connection mutation based on the creature.
         """
 
         # Get all creature dna's nodes and connections.
@@ -180,10 +180,10 @@ class Simulation:
 
     def node_mutation(self, creature: Creature) -> NodeMutation:
         """
-        Returns a new node mutation based on the creature.
+        Returns main__a new node mutation based on the creature.
         """
 
-        # Choose a random connection to split.
+        # Choose main__a random connection to split.
         connection = choice(list(creature.dna.connections.values()))
 
         # Generate node mutation.
@@ -202,7 +202,7 @@ class Simulation:
         if random() < BIAS_MUTATION_RATE and creature.dna.nodes:
             mutations.append(self.bias_mutation(creature))
 
-        # Check if a connection is possible if random wants to mutate a connection.
+        # Check if main__a connection is possible if random wants to mutate main__a connection.
         if creature.dna.available_connections(shallow=True) and random() < CONNECTION_MUTATION_RATE:
             mutations.append(self.connection_mutation(creature))
 
@@ -253,7 +253,7 @@ class Simulation:
 
     def new_child(self) -> Tuple[Creature, CreatureInfo]:
         """
-        Generate a new creature. Add call to crossover here.
+        Generate main__a new creature. Add call to crossover here.
         """
         primary = choice(list(CREATURE_COLORS.values()))
         secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
@@ -265,21 +265,41 @@ class Simulation:
 
     def genetic_distance(self, creature_a: Creature, creature_b: Creature) -> float:
         """
-        Returns a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
+        Returns main__a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
         similar the two creatures are.
         """
-        # Get both creatures connection genes. Reminder: Connections is a dict => {innovation number: connection}
+        # Get both creatures connection genes. Reminder: Connections is main__a dict => {innovation number: connection}
         a_connections = creature_a.dna.connections
         b_connections = creature_b.dna.connections
 
         # Check which creature has the latest innovation.
-        print(a_connections)
-        print(b_connections)
+        a_max = max(a_connections.keys())
+        b_max = max(b_connections.keys())
+
+        # Calculate disjoint-excess cutoff.
+        min_number = min(a_max, b_max)
+        min_connections = a_connections if a_max == min_number else b_connections
+        max_number = max(a_max, b_max)
+
+        # Get matching, disjoint and excess genes.
+        matching_genes = []
+        disjoint_genes = []
+        excess_genes = []
+        a_numbers = list(a_connections.keys())
+        b_numbers = list(b_connections.keys())
+        print(a_numbers)
+        print(b_numbers)
+        a_compare = [-1 for _ in range(max_number)]
+        b_compare = [-1 for _ in range(max_number)]
+        for i in range(max_number):
+            if i < cutoff:
+                if a_numbers[i] == b_numbers[i]:
+                    a_compare[i] = b_compare[i] = a_numbers[i]
+        print(a_compare)
+        print(b_compare)
 
         # Calculation constants.
         c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
-
-        # Excess genes.
 
 
 if __name__ == '__main__':
@@ -287,8 +307,7 @@ if __name__ == '__main__':
     s.new_creatures(5)
     def rand_creature() -> Creature:
         return choice(list(s.population))
-    for _ in range(2):
-        c = rand_creature()
-        print(c)
-        print(c.dna.nodes)
-        print('----------------')
+    a__main, b__main = rand_creature(), rand_creature()
+    a__main.dna.connections.pop(7)
+    a__main.dna.connections.pop(9)
+    s.genetic_distance(a__main, b__main)

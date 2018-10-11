@@ -121,7 +121,7 @@ class ConnectionMutation(Innovation):
                  dst_number: Union[int, None] = None, connection: Union[Connection, None] = None):
         super(ConnectionMutation, self).__init__()
 
-        # Number can be None, but src and dst must be a number.
+        # Number can be None, but src and dst must be main__a number.
         self.number = number if not connection else connection.number
         self.src_number = source_number or connection.src_number
         self.dst_number = dst_number or connection.dst_number
