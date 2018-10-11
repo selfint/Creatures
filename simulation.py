@@ -277,9 +277,10 @@ class Simulation:
         b_max = max(b_connections.keys())
 
         # Calculate disjoint-excess cutoff.
-        min_number = min(a_max, b_max)
-        min_connections = a_connections if a_max == min_number else b_connections
+        cutoff = min(a_max, b_max)
+        min_connections = a_connections if a_max == cutoff else b_connections
         max_number = max(a_max, b_max)
+        max_connections = b_connections if b_max == max_number else a_connections
 
         # Get matching, disjoint and excess genes.
         matching_genes = []
@@ -289,15 +290,27 @@ class Simulation:
         b_numbers = list(b_connections.keys())
         print(a_numbers)
         print(b_numbers)
-        a_compare = [-1 for _ in range(max_number)]
-        b_compare = [-1 for _ in range(max_number)]
-        for i in range(max_number):
-            if i < cutoff:
-                if a_numbers[i] == b_numbers[i]:
-                    a_compare[i] = b_compare[i] = a_numbers[i]
-        print(a_compare)
-        print(b_compare)
 
+        # Line up corresponding mutations by number.
+        a_compare = [None if num not in a_connections else a_connections[num].number for num in range(max_number+1)]
+        b_compare = [None if num not in b_connections else b_connections[num].number for num in range(max_number+1)]
+        for a_num, b_num in zip(a_compare, b_compare):
+
+            # Matching genes.
+            if a_num == b_num and a_num:
+                print('matching')
+                matching_genes.append(a_num)
+
+            # Disjoint genes.
+            elif (a_num or b_num) < cutoff:
+                print('disjoint')
+                disjoint_genes.append(a_num or b_num)
+
+            # Excess genes.
+            elif a_num or b_num:
+                print('excess')
+                excess_genes.append(a_num or b_num)
+        print(matching_genes, disjoint_genes, excess_genes, sep='\n')
         # Calculation constants.
         c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
 

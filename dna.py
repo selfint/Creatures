@@ -105,6 +105,7 @@ class Dna:
         connections = []
         for src in self.input_nodes:
             for dst in self.output_nodes:
+                # TODO 10/11/18 connect_nodes: Initially give connections NONE as number, maybe generate mutations?.
                 connections.append(Connection(len(connections), src.number, dst.number))
 
         return {connection.number: connection for connection in connections}
