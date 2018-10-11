@@ -6,7 +6,7 @@
 from typing import List, Union
 
 # Constants
-from Constants.constants import CREATURE_STRING
+from Constants.constants import CREATURE_STRING, CREATURE_BODY
 from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutput
 from Constants.types import COLOR
 # Objects
@@ -28,14 +28,10 @@ class Creature:
         self.dna = dna if dna is not None else Dna(self.inputs, self.outputs)
         self.network = Network(self.dna.nodes, self.dna.node_connections)
 
-        # Outline how to draw the shape.
-        # For example body = [[(0, 0, 100, 100)], [(0, 100, 20, 20)]]
-        # The first list is all ellipses with the PRIMARY color, [(0, 0, 100, 100)].
-        # The second list is all ellipses with the SECONDARY color, [(0, 100, 20, 20)]. And so on and so forth.
         if colors is None:
             colors = list()
         self.colors = colors
-        self.body = [[(0, 0, 100, 100)], [(0, 100, 25, 25)]]
+        self.body = CREATURE_BODY
 
     def __str__(self):
         return CREATURE_STRING.format(self.name)

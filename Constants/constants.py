@@ -15,13 +15,13 @@ Output Nodes: {}
 """
 
 # Amount of "#" meaning: 1 -> Node number, 2 -> Connection number, 3 -> Mutation number.
-CONNECTION_STRING = "<Connection ##{}({}): #{} -({:.2f})-> #{}>"
-NODE_STRING = "< {} #{} bias: {:.3f} >"
-BASE_MUTATION_STRING = "< {} :: {} >"
-NUMBERED_MUTATION_STRING = "< {} ###{}:: {} >"
-WEIGHT_MUTATION_STRING = "< Connection ##{}: #{} -({:.2f} => {:.2f})-> #{} >"
-BIAS_MUTATION_STRING = "< {} #{} bias: {:.3f} => {:.3f} >"
-NODE_MUTATION_STRING = "< Split: {} | Src: {} | Node: {} | dst: {} >"
+CONNECTION_STRING = "<Connection ##{}({}): #{} ==({:.2f})=> #{}>"
+NODE_STRING = "<{} #{} bias: {:.3f}>"
+BASE_MUTATION_STRING = "<{} :: {}>"
+NUMBERED_MUTATION_STRING = "<{} ###{}:: {}>"
+WEIGHT_MUTATION_STRING = "<Connection ##{}: #{} -({:.2f} => {:.2f})-> #{}>"
+BIAS_MUTATION_STRING = "<{} #{} bias: {:.3f} => {:.3f}>"
+NODE_MUTATION_STRING = "<Split: {} | Src: {} | Node: {} | dst: {}>"
 CREATURE_STRING = "{}"
 
 # Graphics.
@@ -29,15 +29,7 @@ CAPTION = 'Creatures'
 WIDTH, HEIGHT = 800, 600
 SPEED_SCALING = 0.1
 CREATURE_SCALE = 0.2
-CREATURE_COLORS = {  # Will be used to visually differentiate between species.
-    'RED' : (255, 0, 0),
-    'GREEN' : (0, 255, 0),
-    'BLUE' : (0, 0, 255),
-    'PINK': (255, 0, 255),
-    'CYAN': (0, 255, 255),
-    'PURPLE': (128, 0, 128),
-    'ORANGE': (200, 128, 0)
-}
+# Will be used to visually differentiate between species.
 BLACK = 0, 0, 0
 GREY = 125, 125, 125
 WHITE = 255, 255, 255
@@ -45,5 +37,26 @@ RED = 255, 0, 0
 GREEN = 0, 255, 0
 BLUE = 0, 0, 255
 BACKGROUND = 230, 220, 50
+PINK = 255, 0, 255
+CYAN = 0, 255, 255
+PURPLE = 128, 0, 128
+ORANGE = 128, 0, 128
 CENTER = 0
+CREATURE_COLORS = {
+    'RED' : RED,
+    'GREEN' : GREEN,
+    'BLUE' : BLUE,
+    'PINK': PINK,
+    'CYAN': CYAN,
+    'PURPLE': PURPLE,
+    'ORANGE': ORANGE
+}
 
+# Outline how to draw the shape.
+# For example body = [[(0, 0, 100, 100)], [(0, 100, 20, 20)]]
+# The first list is all ellipses with the PRIMARY color, [(0, 0, 100, 100)].
+# The second list is all ellipses with the SECONDARY color, [(0, 100, 20, 20)]. And so on and so forth.
+CREATURE_BODY = [
+    [(0, 0, 100, 100)],
+    [(0, 100, 25, 25)]
+]

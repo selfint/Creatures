@@ -32,7 +32,7 @@ class Dna:
         self.output_nodes = self.get_node_by_type(OutputNode)
 
         # Generate connections if not given any.
-        self.connections = connections or self.connect_nodes()
+        self.connections = connections or dict()  # self.connect_nodes()
         self.update_connections()
 
     def update_connections(self) -> None:
