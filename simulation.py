@@ -13,9 +13,11 @@ from Constants.neat_parameters import BIAS_MUTATION_RATE, CONNECTION_MUTATION_RA
     DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
+from dna import Dna
 from functions import clamp, flatten
 from mutations import Mutation, BiasMutation, ConnectionMutation, MutationObject, NodeMutation, Innovation, \
     WeightMutation
+from node import InputNode
 
 
 class Simulation:
@@ -31,11 +33,13 @@ class Simulation:
         self.connection_count = CREATURE_INPUTS * CREATURE_OUTPUTS - 1
         self.innovation_history = []
 
-        # All attributes that can be changed in creature info
+        # All attributes that can be changed in creature info.
         self.creature_actions = 'x', 'y'
+        base_nodes = {num: InputNode(num) for num in range(CREATURE_OUTPUTS)}
+        base_dna = Dna(CREATURE_INPUTS, CREATURE_OUTPUTS)
 
         # Map creatures to creature info named tuples.
-        for i in range(population_size):
+        for _ in range(population_size):
 
             # Generate random colors, add species-based colors later.
             primary = choice(list(CREATURE_COLORS.values()))
@@ -93,7 +97,8 @@ class Simulation:
         :param decisions: All decisions creature made towards all other creatures.
         """
 
-        # Avg out everything the creature wants to do, using main__a weighted average against the urgency of each decision.
+        # Avg out everything the creature wants to do, using main__a weighted average against the urgency of each
+        # decision.
         move_x, move_y = 0, 0
         for decision in decisions:
             left, right, up, down, urgency = decision
@@ -114,7 +119,7 @@ class Simulation:
 
     def info_to_vec(self, creature_info: CreatureInfo, other_info: CreatureInfo) -> CreatureNetworkInput:
         """
-        Meaningfully convert CreatureInfo of main__a target creature to main__a CreatureNetworkInput named tuple,
+        Meaningfully convert CreatureInfo of a target creature to a CreatureNetworkInput named tuple,
         based on the creature info of the source creature.
         :param creature_info: Source creature (creature LOOKING).
         :param other_info: Destination creature (creature SEEN).
@@ -317,10 +322,11 @@ class Simulation:
 
 if __name__ == '__main__':
     s = Simulation(2)
-    s.new_creatures(5)
-    def rand_creature() -> Creature:
-        return choice(list(s.population))
-    a__main, b__main = rand_creature(), rand_creature()
-    a__main.dna.connections.pop(7)
-    a__main.dna.connections.pop(9)
-    s.genetic_distance(a__main, b__main)
+    # s.new_creatures(5)
+
+    # def rand_creature() -> Creature:
+    #     return choice(list(s.population))
+    # a__main, b__main = rand_creature(), rand_creature()
+    # a__main.dna.connections.pop(7)
+    # a__main.dna.connections.pop(9)
+    # s.genetic_distance(a__main, b__main)

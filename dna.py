@@ -22,10 +22,8 @@ class Dna:
                  connections: Dict[int, Connection] = None):
 
         # Take input & output node amount if given, else take values.
-        self.inputs = len([node for node in nodes if isinstance(node, InputNode)]) \
-            if nodes else inputs
-        self.outputs = len([node for node in nodes if isinstance(node, OutputNode)]) \
-            if nodes else outputs
+        self.inputs = len([node for node in nodes if isinstance(node, InputNode)]) if nodes else inputs
+        self.outputs = len([node for node in nodes if isinstance(node, OutputNode)]) if nodes else outputs
 
         # Generate nodes if not given any.
         self.nodes = nodes or self.generate_nodes()
@@ -45,7 +43,7 @@ class Dna:
 
     def __str__(self):
         return DNA_STRING.format(len(self.input_nodes), len(self.get_node_by_type(HiddenNode)), len(self.output_nodes),
-                                  dict_string(self.node_connections))
+                                 dict_string(self.node_connections))
 
     def __repr__(self):
         return str(self)

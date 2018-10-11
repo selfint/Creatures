@@ -195,4 +195,5 @@ class NodeMutation(Innovation):
     def configurations(self):
         return self.new_dst_connection.number, self.new_node.number, self.new_src_connection.number
 
+
 MutationObject = Union[WeightMutation, BiasMutation, ConnectionMutation, NodeMutation]
