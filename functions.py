@@ -40,6 +40,7 @@ def clamp(value: float, x_min: float, x_max: float) -> float:
     """
     return max(x_min, min(value, x_max))
 
+
 def split_by_type(array: list) -> Dict[type, list]:
     types = dict()
     for element in array:
@@ -49,11 +50,13 @@ def split_by_type(array: list) -> Dict[type, list]:
             types[type(element)] = [element]
     return types
 
+
 def flatten(double_array: List[list]) -> list:
     """
     Turns 2d array into 1d array.
     """
     return [element for array in double_array for element in array]
+
 
 def generate_name() -> str:
     """
@@ -75,6 +78,13 @@ def generate_name() -> str:
             name += 'qu'
 
     return name.capitalize()
+
+
+def ignore(array: list, *args) -> list:
+    """
+    Returns the list without any elements that are in args.
+    """
+    return [_ for _ in array if _ not in args]
 
 
 if __name__ == '__main__':

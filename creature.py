@@ -18,14 +18,12 @@ from network import Network
 
 class Creature:
 
-    def __init__(self, inputs: int = None, outputs: int = None, colors: List[COLOR] = None, dna: Dna = None):
+    def __init__(self, dna: Dna, colors: List[COLOR] = None):
+        self.dna = dna
+        self.inputs = dna.inputs
+        self.outputs = dna.outputs
 
-        # Take dna inputs & outputs if dna is given, else take values.
-        self.inputs = dna.inputs if dna is not None else inputs
-        self.outputs = dna.outputs if dna is not None else outputs
         self.name = generate_name()
-
-        self.dna = dna if dna is not None else Dna(self.inputs, self.outputs)
         self.network = Network(self.dna.nodes, self.dna.node_connections)
 
         if colors is None:
@@ -56,14 +54,14 @@ if __name__ == '__main__':
     from node import *
     from connection import Connection
 
-    nodes = {0: InputNode(0),
+    main_nodes = {0: InputNode(0),
              1: HiddenNode(1, 2),
              2: OutputNode(2, 2)}
-    connections = {0: Connection(number=0, src_number=0, dst_number=1),
+    main_connections = {0: Connection(number=0, src_number=0, dst_number=1),
                    1: Connection(number=1, src_number=1, dst_number=2),
                    2: Connection(number=2, src_number=2, dst_number=1)}
-    dna = Dna(inputs=2, outputs=1, nodes=nodes, connections=connections)
-    c = Creature(dna=dna)
+    main_dna = Dna(inputs=2, outputs=1, nodes=main_nodes, connections=main_connections)
+    c = Creature(dna=main_dna)
     print(c.think([1]))
     print(c.think([0]))
     print(c.dna)

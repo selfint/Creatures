@@ -5,6 +5,7 @@
 # Imports
 from collections import namedtuple
 
+
 # Data structures.
 # - Creature -
 # Creature information is mutable, so cant use named tuple
@@ -20,6 +21,7 @@ class CreatureInfo:
 
     def __repr__(self):
         return str(self)
+
 
 CreatureNetworkInput = namedtuple('CreatureNetworkInput', 'dx dy')
 CreatureNetworkOutput = namedtuple('CreatureNetworkOutput', 'left right up down urgency')

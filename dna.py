@@ -31,8 +31,8 @@ class Dna:
         self.hidden = 0
         self.output_nodes = self.get_node_by_type(OutputNode)
 
-        # Generate connections if not given any.
-        self.connections = connections or dict()  # self.connect_nodes()
+        # Do NOT generate connections unless given.
+        self.connections = connections or dict()
         self.update_connections()
 
     def update_connections(self) -> None:
@@ -50,14 +50,14 @@ class Dna:
 
     def available_connections(self, shallow: bool = False) -> List[Tuple[int, int]]:
         """
-        Returns all nodes that can be connected.
+        Returns all nodes that can be connected. Get all available connections by the following conditions:
+        1. No duplicate connections.
+        2. A connection cannot output into an InputNode.
+        3. An OutputNode cannot output into an OutputNode, but main__a HiddenNode can output into main__a HiddenNode.
         :param shallow: If set, function will return the first available connection.
         """
 
-        # Get all available connections by the following conditions:
-        # 1. No duplicate connections.
-        # 2. A connection cannot output into an InputNode.
-        # 3. An OutputNode cannot output into an OutputNode, but main__a HiddenNode can output into main__a HiddenNode.
+        # Get all possible connections, and remove connections that break the rules.
         available_connections = []
         connections = [(connection.src_number, connection.dst_number) for connection in self.connections.values()]
         for src_number in self.nodes:
@@ -93,20 +93,6 @@ class Dna:
 
         # Use type(x) is y, since we want exact types, ignoring inheritance.
         return tuple(node for node in self.nodes.values() if type(node) is node_type)
-
-    def connect_nodes(self) -> Dict[int, Connection]:
-        """
-        Fully connects all input nodes to output nodes.
-        :return: Dict of indexes corresponding with connections.
-        """
-
-        connections = []
-        for src in self.input_nodes:
-            for dst in self.output_nodes:
-                # TODO 10/11/18 connect_nodes: Initially give connections NONE as number, maybe generate mutations?.
-                connections.append(Connection(len(connections), src.number, dst.number))
-
-        return {connection.number: connection for connection in connections}
 
     def get_node_connections(self, node: NodeObject) -> Dict[str, Tuple[Connection]]:
         """

@@ -10,8 +10,8 @@ from typing import Union, List
 # Constants
 from Constants.constants import NUMBERED_MUTATION_STRING, WEIGHT_MUTATION_STRING, BIAS_MUTATION_STRING, \
     NODE_MUTATION_STRING, BASE_MUTATION_STRING
-from Constants.neat_parameters import WEIGHT_RANGE, BIAS_RANGE, WEIGHT_PERTRUB_RATE, WEIGHT_PERTRUB_AMOUNT, \
-    BIAS_PERTRUB_RATE, BIAS_PERTRUB_AMOUNT
+from Constants.neat_parameters import WEIGHT_RANGE, BIAS_RANGE, WEIGHT_PERTURB_RATE, WEIGHT_PERTURB_AMOUNT, \
+    BIAS_PERTURB_RATE, BIAS_PERTURB_AMOUNT
 from Constants.types import NodeObject
 from connection import Connection
 from node import HiddenNode
@@ -86,8 +86,8 @@ class WeightMutation(Mutation):
         number, src, weight, dst = connection.number, connection.src_number, connection.weight, connection.dst_number
 
         # Randomly choose between perturbing the weight or completely changing it.
-        if random() < WEIGHT_PERTRUB_RATE:
-            self.new_weight = weight + (random() * 2 - 1) * WEIGHT_PERTRUB_AMOUNT
+        if random() < WEIGHT_PERTURB_RATE:
+            self.new_weight = weight + (random() * 2 - 1) * WEIGHT_PERTURB_AMOUNT
         else:
             self.new_weight = random() * WEIGHT_RANGE * 2 - WEIGHT_RANGE
 
@@ -106,8 +106,8 @@ class BiasMutation(Mutation):
         self.number = node.number
 
         # Randomly choose between perturbing the bias or completely changing it.
-        if random() < BIAS_PERTRUB_RATE:
-            self.new_bias = self.node.bias + (random() * 2 - 1) * BIAS_PERTRUB_AMOUNT
+        if random() < BIAS_PERTURB_RATE:
+            self.new_bias = self.node.bias + (random() * 2 - 1) * BIAS_PERTURB_AMOUNT
         else:
             self.new_bias = random() * BIAS_RANGE * 2 - BIAS_RANGE
 
@@ -125,7 +125,7 @@ class ConnectionMutation(Innovation):
         self.number = number if not connection else connection.number
         self.src_number = src_number if not connection else connection.src_number
         self.dst_number = dst_number if not connection else connection.dst_number
-        self.connection = connection or Connection(None, self.src_number, self.dst_number)
+        self.connection = connection or Connection(self.number, self.src_number, self.dst_number)
         self.set_string()
 
     def set_string(self) -> None:

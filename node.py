@@ -75,8 +75,8 @@ class OutputNode(HiddenNode):
     OutputNode is the same as HiddenNode, here for easy recognition of output nodes later on.
     """
 
-    def __init__(self, number: int, bias: float, activation: Callable[[float], float] = sigmoid):
-        super(OutputNode, self).__init__(number, bias, activation)
+    def __init__(self, number: int, bias_range: float, activation: Callable[[float], float] = sigmoid):
+        super(OutputNode, self).__init__(number, bias_range, activation)
 
 
 if __name__ == '__main__':

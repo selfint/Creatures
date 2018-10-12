@@ -4,67 +4,75 @@
 
 # Imports
 from random import choice, randint, random
-from typing import Dict, List, Union, Tuple
+from typing import List, Tuple
 
 # Constants
-from Constants.constants import CREATURE_COLORS, HEIGHT, SPEED_SCALING, WIDTH, CREATURE_SCALE
+from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_SCALING, WIDTH
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
-from Constants.neat_parameters import BIAS_MUTATION_RATE, CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, \
-    DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, WEIGHT_MUTATION_RATE
+from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
+    CREATURE_INPUTS, CREATURE_OUTPUTS, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, \
+    WEIGHT_MUTATION_RATE, POPULATION_SIZE
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, flatten
-from mutations import Mutation, BiasMutation, ConnectionMutation, MutationObject, NodeMutation, Innovation, \
-    WeightMutation
-from node import InputNode
+from functions import clamp, ignore
+from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
+from node import InputNode, OutputNode
 
 
 class Simulation:
 
-    def __init__(self, population_size: int):
-        if population_size < 1:
+    def __init__(self):
+        if POPULATION_SIZE < 1:
             raise ValueError('Population size must be at least 1')
-        self.population_size = population_size
-        self.population = dict()
         self.world_width = WIDTH
         self.world_height = HEIGHT
-        self.node_count = CREATURE_INPUTS + CREATURE_OUTPUTS - 1
-        self.connection_count = CREATURE_INPUTS * CREATURE_OUTPUTS - 1
         self.innovation_history = []
 
         # All attributes that can be changed in creature info.
         self.creature_actions = 'x', 'y'
-        base_nodes = {num: InputNode(num) for num in range(CREATURE_OUTPUTS)}
-        base_dna = Dna(CREATURE_INPUTS, CREATURE_OUTPUTS)
+
+        # Define genotype that starts evolution, and set innovation history, connection and node count accordingly.
+        base_dna, self.innovation_history = self.base_dna()
+        self.connection_count = len(self.innovation_history) + 1
+        self.node_count = len(base_dna.nodes) + 1
 
         # Map creatures to creature info named tuples.
-        for _ in range(population_size):
-
-            # Generate random colors, add species-based colors later.
-            primary = choice(list(CREATURE_COLORS.values()))
-            secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
-
-            # Generate creature and creature info.
-            creature = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS, colors=[primary, secondary])
-            creature_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), CREATURE_SCALE)
-            self.population[creature] = creature_info
-
-        # Add all connections to mutation history.
-        self.connection_count = 0
-        temp = list(self.population.keys())[0]
-        connections = temp.dna.connections.values()
-        for conn in connections:
-            self.innovation_history.append(ConnectionMutation(connection=conn))
+        self.population = dict(self.new_child() for _ in range(POPULATION_SIZE))
 
         # Generate world.
         self.update_world()
 
-    def update_world(self) -> None:
+    @staticmethod
+    def base_dna() -> Tuple[Dna, List[ConnectionMutation]]:
         """
-        Updates world_info
+        Generate base Dna to start creatures from, connect nodes with connection mutations.
         """
 
+        # Generate base Dna to start creatures from.
+        base_nodes = {}
+        for num in range(1, CREATURE_INPUTS + CREATURE_OUTPUTS + 1):
+            base_nodes[num] = InputNode(num) if num < CREATURE_INPUTS + 1 else OutputNode(num, BIAS_RANGE)
+
+        # Connect nodes with connection mutations.
+        base_dna = Dna(CREATURE_INPUTS, CREATURE_OUTPUTS, nodes=base_nodes)
+        mutations = []
+
+        # Connect nodes by NEAT PARAMETER settings.
+        if BASE_DNA == 'CONNECTED':
+            for src_number in range(CREATURE_INPUTS):
+                for dst_number in range(CREATURE_INPUTS, CREATURE_INPUTS + CREATURE_OUTPUTS):
+
+                    # Generate connection mutation between each Input node to every Output node.
+                    mutation = ConnectionMutation(len(mutations)+1, src_number+1, dst_number+1)
+                    mutations.append(mutation)
+            base_dna.update(mutations)
+        return base_dna, mutations
+
+    def update_world(self) -> None:
+        """
+        Updates world_info.
+        """
         # Add all object in the world and their info into the world info dictionary.
         self.world_info = self.population
 
@@ -91,7 +99,8 @@ class Simulation:
             creature_attr, action_attr = getattr(info, attr), getattr(creature_actions, attr)
             setattr(info, attr, creature_attr + action_attr)
 
-    def interpret_decisions(self, decisions: List[CreatureNetworkOutput]) -> CreatureActions:
+    @staticmethod
+    def interpret_decisions(decisions: List[CreatureNetworkOutput]) -> CreatureActions:
         """
         Converts creature network output to creature actions.
         :param decisions: All decisions creature made towards all other creatures.
@@ -142,7 +151,8 @@ class Simulation:
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
 
-    def weight_mutation(self, creature: Creature) -> WeightMutation:
+    @staticmethod
+    def weight_mutation(creature: Creature) -> WeightMutation:
         """
         Return main__a weight mutation object from the creature. A weight mutation has no number, the object is here
         for organization purposes. ALWAYS returns main__a mutation, random chance is handle in simulation.mutate().
@@ -155,7 +165,8 @@ class Simulation:
         mutation = WeightMutation(connection)
         return mutation
 
-    def bias_mutation(self, creature: Creature) -> BiasMutation:
+    @staticmethod
+    def bias_mutation(creature: Creature) -> BiasMutation:
         """
         Return main__a weight mutation object from the creature. A weight mutation has no number, the object is here
         for organization purposes. ALWAYS returns main__a mutation, random chance is handle in simulation.mutate().
@@ -168,7 +179,8 @@ class Simulation:
         mutation = BiasMutation(node)
         return mutation
 
-    def connection_mutation(self, creature: Creature) -> ConnectionMutation:
+    @staticmethod
+    def connection_mutation(creature: Creature) -> ConnectionMutation:
         """
         Returns main__a new old_connection mutation based on the creature.
         """
@@ -183,7 +195,8 @@ class Simulation:
         mutation = ConnectionMutation(None, src, dst)
         return mutation
 
-    def node_mutation(self, creature: Creature) -> NodeMutation:
+    @staticmethod
+    def node_mutation(creature: Creature) -> NodeMutation:
         """
         Returns main__a new node mutation based on the creature.
         """
@@ -217,7 +230,8 @@ class Simulation:
 
         return mutations
 
-    def apply_mutations(self, creature: Creature, mutations: List[MutationObject]) -> None:
+    @staticmethod
+    def apply_mutations(creature: Creature, mutations: List[MutationObject]) -> None:
         """
         Applies mutation to creature's dna.
         """
@@ -261,14 +275,16 @@ class Simulation:
         Generate main__a new creature. Add call to crossover here.
         """
         primary = choice(list(CREATURE_COLORS.values()))
-        secondary = choice(list(color for color in CREATURE_COLORS.values() if color is not primary))
+        secondary = choice(ignore(CREATURE_COLORS.values(), primary))
 
         # Generate creature and creature info.
-        child = Creature(CREATURE_INPUTS, CREATURE_OUTPUTS, colors=[primary, secondary])
+        default_dna, _ = self.base_dna()
+        child = Creature(default_dna, colors=[primary, secondary])
         child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), CREATURE_SCALE)
         return child, child_info
 
-    def genetic_distance(self, creature_a: Creature, creature_b: Creature) -> float:
+    @staticmethod
+    def genetic_distance(creature_a: Creature, creature_b: Creature) -> float:
         """
         Returns main__a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
         similar the two creatures are.
@@ -321,11 +337,13 @@ class Simulation:
 
 
 if __name__ == '__main__':
-    s = Simulation(2)
-    # s.new_creatures(5)
+    s = Simulation()
+    s.new_creatures(5)
 
-    # def rand_creature() -> Creature:
-    #     return choice(list(s.population))
+    def rand_creature() -> Creature:
+        return choice(list(s.population))
+    print(rand_creature().dna.connections)
+    print(s.population)
     # a__main, b__main = rand_creature(), rand_creature()
     # a__main.dna.connections.pop(7)
     # a__main.dna.connections.pop(9)
