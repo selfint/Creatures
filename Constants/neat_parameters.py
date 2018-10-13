@@ -12,9 +12,13 @@ def sigmoid(x: float) -> float:
 
 
 # General
-POPULATION_SIZE = 2
+POPULATION_SIZE = 50
 CREATURE_INPUTS = 2
 CREATURE_OUTPUTS = 5
+
+# New Creature
+CROSSOVER_RATE = 0.0
+INTER_SPECIES_MATE = 0.001
 
 # Dna
 BASE_DNA = 'CONNECTED'

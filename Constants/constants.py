@@ -28,7 +28,8 @@ CREATURE_STRING = "{}"
 CAPTION = 'Creatures'
 WIDTH, HEIGHT = 800, 600
 SPEED_SCALING = 0.1
-CREATURE_SCALE = 0.2
+CREATURE_SCALE = 0.05
+CENTER = 0  # Defines drawing ellipse from their center.
 # Will be used to visually differentiate between species.
 BLACK = 0, 0, 0
 GREY = 125, 125, 125
@@ -37,11 +38,11 @@ RED = 255, 0, 0
 GREEN = 0, 255, 0
 BLUE = 0, 0, 255
 BACKGROUND = 230, 220, 50
+SIMULATION_BACKGROUND = 100, 220, 90
 PINK = 255, 0, 255
 CYAN = 0, 255, 255
 PURPLE = 128, 0, 128
 ORANGE = 128, 0, 128
-CENTER = 0
 CREATURE_COLORS = {
     'RED' : RED,
     'GREEN' : GREEN,

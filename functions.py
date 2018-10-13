@@ -1,7 +1,7 @@
 # functions.py
 # Description: functions.
 # ---------------------------------------------------------------------------------------------------------------------
-from typing import List, Dict
+from typing import List, Dict, Iterable
 from random import gauss, random, choice, randint
 
 
@@ -80,11 +80,11 @@ def generate_name() -> str:
     return name.capitalize()
 
 
-def ignore(array: list, *args) -> list:
+def ignore(iterable: Iterable, *args) -> list:
     """
     Returns the list without any elements that are in args.
     """
-    return [_ for _ in array if _ not in args]
+    return [_ for _ in iterable if _ not in args]
 
 
 if __name__ == '__main__':

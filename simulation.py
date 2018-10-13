@@ -11,7 +11,7 @@ from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_S
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, \
-    WEIGHT_MUTATION_RATE, POPULATION_SIZE
+    WEIGHT_MUTATION_RATE, POPULATION_SIZE, CROSSOVER_RATE
 # Objects
 from creature import Creature
 from dna import Dna
@@ -22,11 +22,12 @@ from node import InputNode, OutputNode
 
 class Simulation:
 
-    def __init__(self):
+    def __init__(self, width: int = WIDTH, height: int = WIDTH, creature_scale: float = CREATURE_SCALE):
         if POPULATION_SIZE < 1:
             raise ValueError('Population size must be at least 1')
-        self.world_width = WIDTH
-        self.world_height = HEIGHT
+        self.world_width = width
+        self.world_height = height
+        self.creature_scale = creature_scale
         self.innovation_history = []
 
         # All attributes that can be changed in creature info.
@@ -84,10 +85,10 @@ class Simulation:
         # Get creature's thoughts about all other creatures.
         for creature, creature_info in self.population.items():
             creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
-                                  for other, other_info in self.world_info.items() if other is not creature]
+                                  for other, other_info in ignore(self.world_info.items(), (creature, creature_info))]
             creature_actions = self.interpret_decisions(creature_decisions)
             self.apply_action(creature, creature_actions)
-        self.constrain_creatures()
+        # self.constrain_creatures()
         self.update_world()
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
@@ -237,14 +238,22 @@ class Simulation:
         """
         creature.update(mutations)
 
-    def new_creatures(self, amount: int) -> None:
+    def new_birth(self, parents: Tuple[Creature, Creature]) -> None:
         """
-        Generate new creatures, and adds them to the population.
+        Generate new creature from two parents, or generate it by mutating one of the parents.
         """
-        for _ in range(amount):
-            child, child_info = self.new_child()
-            self.apply_mutations(child, self.generate_mutations(child))
-            self.population[child] = child_info
+
+        # Generate child dna from crossover of parents, or pick one of the parent's dna.
+        if random() < CROSSOVER_RATE:
+            raise NotImplementedError('Crossover function not built yet.')
+            # Define dna here.
+        else:
+            dna = choice(parents).dna
+
+        child, child_info = self.new_child(dna)
+        self.apply_mutations(child, self.generate_mutations(child))
+        self.population[child] = child_info
+        print(dna)
 
     def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
@@ -270,7 +279,7 @@ class Simulation:
                 self.innovation_history.append(innovation)
         return mutations
 
-    def new_child(self) -> Tuple[Creature, CreatureInfo]:
+    def new_child(self, dna: Dna = None) -> Tuple[Creature, CreatureInfo]:
         """
         Generate main__a new creature. Add call to crossover here.
         """
@@ -278,9 +287,10 @@ class Simulation:
         secondary = choice(ignore(CREATURE_COLORS.values(), primary))
 
         # Generate creature and creature info.
-        default_dna, _ = self.base_dna()
-        child = Creature(default_dna, colors=[primary, secondary])
-        child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), CREATURE_SCALE)
+
+        child_dna = dna or self.base_dna()[0]
+        child = Creature(child_dna, colors=[primary, secondary])
+        child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), self.creature_scale)
         return child, child_info
 
     @staticmethod
@@ -299,9 +309,7 @@ class Simulation:
 
         # Calculate disjoint-excess cutoff.
         cutoff = min(a_max, b_max)
-        min_connections = a_connections if a_max == cutoff else b_connections
         max_number = max(a_max, b_max)
-        max_connections = b_connections if b_max == max_number else a_connections
 
         # Get matching, disjoint and excess genes.
         matching_genes = []
@@ -323,7 +331,7 @@ class Simulation:
                 matching_genes.append(a_num)
 
             # Disjoint genes.
-            elif (a_num or b_num) < cutoff:
+            elif (a_num or b_num) and (a_num or b_num) < cutoff:
                 print('disjoint')
                 disjoint_genes.append(a_num or b_num)
 
@@ -338,12 +346,14 @@ class Simulation:
 
 if __name__ == '__main__':
     s = Simulation()
-    s.new_creatures(5)
 
     def rand_creature() -> Creature:
         return choice(list(s.population))
-    print(rand_creature().dna.connections)
-    print(s.population)
+
+
+    a = rand_creature()
+    b = rand_creature()
+    s.new_birth((a, b))
     # a__main, b__main = rand_creature(), rand_creature()
     # a__main.dna.connections.pop(7)
     # a__main.dna.connections.pop(9)

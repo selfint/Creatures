@@ -10,7 +10,7 @@ import pygame
 from pygame import gfxdraw
 
 # Constants
-from Constants.constants import CENTER, BLACK, GREY, BACKGROUND
+from Constants.constants import CENTER, BLACK, GREY, BACKGROUND, SIMULATION_BACKGROUND
 from Constants.types import COLOR
 # Objects
 from creature import Creature
@@ -56,11 +56,12 @@ def draw_creature(screen: object, creature: Creature, x: float, y: float, scale:
                     shape_color)
 
 
-def draw_object(screen: object, thing: Union[Creature], x:float, y:float, scale:float) -> None:
+def draw_object(screen: object, thing: Union[Creature], x: float, y: float, scale: float) -> None:
     """
     Calls the appropriate function based on the object type. Assumes the object has Info tuple
     """
 
+    # Draw Creatures.
     if isinstance(thing, Creature):
         draw_creature(screen, thing, x, y, scale)
 
@@ -78,6 +79,10 @@ class Graphics:
         pygame.display.set_caption(caption)
         self.clock = pygame.time.Clock()
 
+        # Setup camera.
+        self.camera = {'x': width / 2.0, 'y': height / 2.0, 'w': width / 2.0, 'h': height / 2.0}
+        # self.camera = {'x': width / 2.0, 'y': height / 2.0, 'w': width, 'h': height}
+
     def run(self) -> None:
         """
         Runs graphics.
@@ -89,17 +94,39 @@ class Graphics:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
+
+                # Camera movement.
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        self.camera['x'] -= 1
+                    elif event.key == pygame.K_UP:
+                        self.camera['y'] -= 1
+                    elif event.key == pygame.K_RIGHT:
+                        self.camera['x'] += 1
+                    elif event.key == pygame.K_DOWN:
+                        self.camera['y'] += 1
             self.screen.fill(BACKGROUND)
             self.simulation.update()
             for obj in self.simulation.world_info:
                 object_info = self.simulation.world_info[obj]
-                draw_object(self.screen, obj, object_info.x, object_info.y, object_info.scale)
+
+                # Make sure object is in view of the camera.
+                if -self.camera['w'] / 2.0 < object_info.x - self.camera['x'] < self.camera['w'] / 2.0:
+                    if -self.camera['h'] / 2.0 < object_info.y - self.camera['y'] < self.camera['h'] / 2.0:
+                        draw_object(self.screen, obj, object_info.x, object_info.y,
+                                    object_info.scale)
+            self.draw_camera()
             pygame.display.update()
             self.clock.tick()
 
+    def draw_camera(self):
+        pygame.draw.rect(self.screen, BLACK, (self.camera['x'] - self.camera['w'] / 2.0,
+                                              self.camera['y'] - self.camera['h'] / 2.0,
+                                              self.camera['w'], self.camera['h']),
+                         int(self.width / 200))
 
 
 if __name__ == '__main__':
-    g = Graphics(Simulation(1), 800, 600, 'Graphics test')
+    g = Graphics(Simulation(), 800, 600, 'Graphics test')
     g.run()
 
