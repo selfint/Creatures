@@ -10,7 +10,7 @@ import pygame
 from pygame import gfxdraw
 
 # Constants
-from Constants.constants import CENTER, BLACK, GREY, BACKGROUND, SIMULATION_BACKGROUND
+from Constants.constants import BACKGROUND, BLACK, CENTER, FRAME_RATE, GREY, RED, SIMULATION_BACKGROUND
 from Constants.types import COLOR
 # Objects
 from creature import Creature
@@ -18,7 +18,7 @@ from simulation import Simulation
 
 
 def ellipse(screen: object, x: float, y: float, width: float, height: float,
-            color: COLOR = None, stroke: COLOR = BLACK, mode:int = CENTER) -> None:
+            color: COLOR = None, stroke: COLOR = BLACK, mode: int = CENTER) -> None:
     """
     Draw an anti-aliased ellipse onto the screen.
     :param stroke: Edge color of the ellipse.
@@ -52,7 +52,7 @@ def draw_creature(screen: object, creature: Creature, x: float, y: float, scale:
                 shape_color = creature.colors[i]
             else:
                 shape_color = None
-            ellipse(screen, x + shape_x*scale, y + shape_y*scale, scale * shape_width, scale * shape_height,
+            ellipse(screen, x + shape_x * scale, y + shape_y * scale, scale * shape_width, scale * shape_height,
                     shape_color)
 
 
@@ -80,8 +80,11 @@ class Graphics:
         self.clock = pygame.time.Clock()
 
         # Setup camera.
-        self.camera = {'x': width / 2.0, 'y': height / 2.0, 'w': width / 2.0, 'h': height / 2.0}
-        # self.camera = {'x': width / 2.0, 'y': height / 2.0, 'w': width, 'h': height}
+        self.camera_window_x = 0
+        self.camera_window_y = 0
+        self.camera_dx, self.camera_dy = 0, 0
+        self.camera = {'x': self.camera_window_x, 'y': self.camera_window_y,
+                       'w': self.width / 2.0, 'h': self.height / 2.0}
 
     def run(self) -> None:
         """
@@ -98,30 +101,63 @@ class Graphics:
                 # Camera movement.
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        self.camera['x'] -= 1
+                        self.camera_dx = -1
                     elif event.key == pygame.K_UP:
-                        self.camera['y'] -= 1
+                        self.camera_dy = -1
                     elif event.key == pygame.K_RIGHT:
-                        self.camera['x'] += 1
+                        self.camera_dx = 1
                     elif event.key == pygame.K_DOWN:
-                        self.camera['y'] += 1
+                        self.camera_dy = 1
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT:
+                        self.camera_dx = 0
+                    elif event.key == pygame.K_UP:
+                        self.camera_dy = 0
+                    elif event.key == pygame.K_RIGHT:
+                        self.camera_dx = 0
+                    elif event.key == pygame.K_DOWN:
+                        self.camera_dy = 0
+            self.camera['x'] += self.camera_dx
+            self.camera['y'] += self.camera_dy
+
+            # Draw screen shapes.
             self.screen.fill(BACKGROUND)
+            self.draw_simulation_background()
+
+            # Run simulation.
             self.simulation.update()
             for obj in self.simulation.world_info:
                 object_info = self.simulation.world_info[obj]
 
                 # Make sure object is in view of the camera.
-                if -self.camera['w'] / 2.0 < object_info.x - self.camera['x'] < self.camera['w'] / 2.0:
-                    if -self.camera['h'] / 2.0 < object_info.y - self.camera['y'] < self.camera['h'] / 2.0:
-                        draw_object(self.screen, obj, object_info.x, object_info.y,
-                                    object_info.scale)
+                if self.in_view(object_info.x, object_info.y):
+                    draw_object(self.screen, obj,
+                                object_info.x - self.camera['x'],
+                                object_info.y - self.camera['y'],
+                                object_info.scale)
             self.draw_camera()
-            pygame.display.update()
-            self.clock.tick()
+
+            # Update frame.
+            pygame.display.flip()
+            self.clock.tick(FRAME_RATE)
+
+    def in_view(self, x, y):
+        if 0 < x - self.camera['x'] - self.camera_window_x < self.camera['w']:
+            if 0 < y - self.camera['y'] - self.camera_window_y < self.camera['h']:
+                return True
+        return False
+
+    def draw_simulation_background(self):
+        pygame.gfxdraw.filled_polygon(self.screen, [[self.camera_window_x, self.camera_window_y],
+                                                    [self.camera_window_x + self.camera['w'], self.camera_window_y],
+                                                    [self.camera_window_x + self.camera['w'],
+                                                     self.camera_window_y + self.camera['h']],
+                                                    [self.camera_window_x, self.camera_window_y + self.camera['h']]],
+                                      SIMULATION_BACKGROUND)
 
     def draw_camera(self):
-        pygame.draw.rect(self.screen, BLACK, (self.camera['x'] - self.camera['w'] / 2.0,
-                                              self.camera['y'] - self.camera['h'] / 2.0,
+        pygame.draw.rect(self.screen, BLACK, (self.camera_window_x,
+                                              self.camera_window_y,
                                               self.camera['w'], self.camera['h']),
                          int(self.width / 200))
 
@@ -129,4 +165,3 @@ class Graphics:
 if __name__ == '__main__':
     g = Graphics(Simulation(), 800, 600, 'Graphics test')
     g.run()
-

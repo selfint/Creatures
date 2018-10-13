@@ -12,7 +12,7 @@ def sigmoid(x: float) -> float:
 
 
 # General
-POPULATION_SIZE = 50
+POPULATION_SIZE = 2
 CREATURE_INPUTS = 2
 CREATURE_OUTPUTS = 5
 

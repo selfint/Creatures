@@ -29,6 +29,7 @@ CAPTION = 'Creatures'
 WIDTH, HEIGHT = 800, 600
 SPEED_SCALING = 0.1
 CREATURE_SCALE = 0.05
+FRAME_RATE = 200
 CENTER = 0  # Defines drawing ellipse from their center.
 # Will be used to visually differentiate between species.
 BLACK = 0, 0, 0

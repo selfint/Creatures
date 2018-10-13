@@ -88,7 +88,9 @@ class Simulation:
                                   for other, other_info in ignore(self.world_info.items(), (creature, creature_info))]
             creature_actions = self.interpret_decisions(creature_decisions)
             self.apply_action(creature, creature_actions)
-        # self.constrain_creatures()
+
+        # Constrains creature to stay in the simulation world, not the screen.
+        self.constrain_creatures()
         self.update_world()
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
