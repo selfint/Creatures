@@ -3,6 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
+from copy import deepcopy
 from random import choice, randint, random
 from typing import List, Tuple
 
@@ -13,7 +14,7 @@ from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_S
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, \
-    WEIGHT_MUTATION_RATE, POPULATION_SIZE, CROSSOVER_RATE
+    WEIGHT_MUTATION_RATE, POPULATION_SIZE, CROSSOVER_RATE, DISTANCE_THRESHOLD
 # Objects
 from creature import Creature
 from dna import Dna
@@ -43,7 +44,12 @@ class Simulation:
         # Map creatures to creature info named tuples.
         self.population = dict(self.new_child() for _ in range(POPULATION_SIZE))
 
+        # Categorize different species.
+        self.species = {}
+        self.catalogue_species()
+
         # Generate world.
+        self.world_info = {}
         self.update_world()
 
     @staticmethod
@@ -251,12 +257,11 @@ class Simulation:
             raise NotImplementedError('Crossover function not built yet.')
             # Define dna here.
         else:
-            dna = choice(parents).dna
+            dna = deepcopy(choice(parents).dna)
 
         child, child_info = self.new_child(dna)
         self.apply_mutations(child, self.generate_mutations(child))
         self.population[child] = child_info
-        print(dna)
 
     def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
@@ -338,12 +343,31 @@ class Simulation:
 
         # Calculate genetic distance.
         c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
-        delta_weights = average([(a_connections[number].weight - b_connections[number].weight) for number in
+        delta_weights = average([abs(a_connections[number].weight - b_connections[number].weight) for number in
                                  matching_genes])
         genetic_distance = (c1 * len(excess_genes) / max_number) + (c2 * len(disjoint_genes) / max_number) + \
                            (c3 * delta_weights)
-
         return genetic_distance
+
+    def catalogue_species(self):
+        """
+        Generates a dictionary with a creature as a key and all creatures in the population that are similar to it,
+        including itself. This function is called every frame. It chooses random creatures and assigns species
+        accordingly. This shouldn't be a problem since the species should stay basically the same.
+        """
+        self.species = {}
+        uncatalogued_creatures = list(self.population.keys())
+
+        while uncatalogued_creatures:
+            creature = choice(uncatalogued_creatures)
+            for species_representative in self.species:
+                if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
+                    self.species[species_representative].append(creature)
+                    uncatalogued_creatures.remove(creature)
+                    break
+            else:
+                self.species[creature] = [creature]
+                uncatalogued_creatures.remove(creature)
 
 
 if __name__ == '__main__':
@@ -357,4 +381,7 @@ if __name__ == '__main__':
     a, b = s.population.keys()
     s.new_birth((a, b))
     a, b, c = s.population.keys()
-    s.genetic_distance(a, c)
+    s.catalogue_species()
+    print(s.genetic_distance(a, b))
+    print(s.genetic_distance(a, c))
+    print(a, b, c)

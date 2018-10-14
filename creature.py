@@ -32,7 +32,7 @@ class Creature:
         self.body = CREATURE_BODY
 
     def __str__(self):
-        return CREATURE_STRING.format(self.name)
+        return CREATURE_STRING.format(self.name, self.dna.hidden)
 
     def __repr__(self):
         return str(self)
