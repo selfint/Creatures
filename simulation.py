@@ -7,6 +7,8 @@ from random import choice, randint, random
 from typing import List, Tuple
 
 # Constants
+from numpy import average
+
 from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_SCALING, WIDTH
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
@@ -63,9 +65,8 @@ class Simulation:
         if BASE_DNA == 'CONNECTED':
             for src_number in range(CREATURE_INPUTS):
                 for dst_number in range(CREATURE_INPUTS, CREATURE_INPUTS + CREATURE_OUTPUTS):
-
                     # Generate connection mutation between each Input node to every Output node.
-                    mutation = ConnectionMutation(len(mutations)+1, src_number+1, dst_number+1)
+                    mutation = ConnectionMutation(len(mutations) + 1, src_number + 1, dst_number + 1)
                     mutations.append(mutation)
             base_dna.update(mutations)
         return base_dna, mutations
@@ -277,7 +278,7 @@ class Simulation:
             # And add innovation to innovation history.
             else:
                 self.connection_count, self.node_count = innovation.calc_configurations(self.connection_count,
-                                                                                      self.node_count)
+                                                                                        self.node_count)
                 self.innovation_history.append(innovation)
         return mutations
 
@@ -317,46 +318,43 @@ class Simulation:
         matching_genes = []
         disjoint_genes = []
         excess_genes = []
-        a_numbers = list(a_connections.keys())
-        b_numbers = list(b_connections.keys())
-        print(a_numbers)
-        print(b_numbers)
 
         # Line up corresponding mutations by number.
-        a_compare = [None if num not in a_connections else a_connections[num].number for num in range(max_number+1)]
-        b_compare = [None if num not in b_connections else b_connections[num].number for num in range(max_number+1)]
+        a_compare = [None if num not in a_connections else a_connections[num].number for num in range(max_number + 1)]
+        b_compare = [None if num not in b_connections else b_connections[num].number for num in range(max_number + 1)]
         for a_num, b_num in zip(a_compare, b_compare):
 
             # Matching genes.
             if a_num == b_num and a_num:
-                print('matching')
                 matching_genes.append(a_num)
 
             # Disjoint genes.
             elif (a_num or b_num) and (a_num or b_num) < cutoff:
-                print('disjoint')
                 disjoint_genes.append(a_num or b_num)
 
             # Excess genes.
             elif a_num or b_num:
-                print('excess')
                 excess_genes.append(a_num or b_num)
-        print(matching_genes, disjoint_genes, excess_genes, sep='\n')
-        # Calculation constants.
+
+        # Calculate genetic distance.
         c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
+        delta_weights = average([(a_connections[number].weight - b_connections[number].weight) for number in
+                                 matching_genes])
+        genetic_distance = (c1 * len(excess_genes) / max_number) + (c2 * len(disjoint_genes) / max_number) + \
+                           (c3 * delta_weights)
+
+        return genetic_distance
 
 
 if __name__ == '__main__':
     s = Simulation()
 
+
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
 
-    a = rand_creature()
-    b = rand_creature()
+    a, b = s.population.keys()
     s.new_birth((a, b))
-    # a__main, b__main = rand_creature(), rand_creature()
-    # a__main.dna.connections.pop(7)
-    # a__main.dna.connections.pop(9)
-    # s.genetic_distance(a__main, b__main)
+    a, b, c = s.population.keys()
+    s.genetic_distance(a, c)

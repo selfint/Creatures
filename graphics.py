@@ -40,8 +40,6 @@ def ellipse(screen: object, x: float, y: float, width: float, height: float,
 def draw_creature(screen: object, creature: Creature, x: float, y: float, scale: float) -> None:
     """
     Parses creature body data and draws it onto the screen.
-    :param scale: Changes the size of the creature.
-    :param colors: Color theme for creature, will be treated as primary and secondary color.
     """
 
     # Get creature body data.
@@ -84,7 +82,7 @@ class Graphics:
         self.camera_window_y = 0
         self.camera_dx, self.camera_dy = 0, 0
         self.camera = {'x': self.camera_window_x, 'y': self.camera_window_y,
-                       'w': self.width / 2.0, 'h': self.height / 2.0}
+                       'w': self.width / 1.5, 'h': self.height / 1.5}
 
     def run(self) -> None:
         """
