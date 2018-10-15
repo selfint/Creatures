@@ -385,10 +385,15 @@ class Simulation:
         """
 
         # Choose parents based on creature species, and all creatures fitness'.
-        mother_species = parent_b_species = self.get_species(creature)
+        parent_a_species = parent_b_species = self.get_species(creature)
         if random() < INTER_SPECIES_MATE:
-            father_species = choice(ignore(self.species.keys(), creature_species))
+            parent_b_species = choice(ignore(self.species, parent_a_species))
+        parent_a = choice(self.species[parent_a_species])
+        parent_b = choice(ignore(self.species[parent_b_species], parent_a))
 
+        # Kill creature and birth child.
+        del self.population[creature]
+        self.new_birth((parent_a, parent_b))
 
     def get_species(self, creature: Creature) -> Creature:
         """
@@ -397,8 +402,6 @@ class Simulation:
         for rep, species in self.species.items():
             if creature in species:
                 return rep
-        print(creature)
-        print(self.species)
         raise Exception("Shouldn't be reachable")
 
 
@@ -410,6 +413,3 @@ if __name__ == '__main__':
         return choice(list(s.population))
 
 
-    for _ in range(10):
-        s.new_birth((rand_creature(), rand_creature()))
-    s.creature_death(rand_creature())
