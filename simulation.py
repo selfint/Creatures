@@ -14,7 +14,7 @@ from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_S
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, \
-    WEIGHT_MUTATION_RATE, POPULATION_SIZE, CROSSOVER_RATE, DISTANCE_THRESHOLD
+    WEIGHT_MUTATION_RATE, POPULATION_SIZE, CROSSOVER_RATE, DISTANCE_THRESHOLD, INTER_SPECIES_MATE
 # Objects
 from creature import Creature
 from dna import Dna
@@ -25,9 +25,11 @@ from node import InputNode, OutputNode
 
 class Simulation:
 
-    def __init__(self, width: int = WIDTH, height: int = WIDTH, creature_scale: float = CREATURE_SCALE):
-        if POPULATION_SIZE < 1:
+    def __init__(self, population_size: int = POPULATION_SIZE, width: int = WIDTH, height: int = WIDTH,
+                 creature_scale: float = CREATURE_SCALE):
+        if population_size < 1:
             raise ValueError('Population size must be at least 1')
+        self.population_size = population_size
         self.world_width = width
         self.world_height = height
         self.creature_scale = creature_scale
@@ -42,7 +44,7 @@ class Simulation:
         self.node_count = len(base_dna.nodes) + 1
 
         # Map creatures to creature info named tuples.
-        self.population = dict(self.new_child() for _ in range(POPULATION_SIZE))
+        self.population = dict(self.new_child() for _ in range(self.population_size))
 
         # Categorize different species.
         self.species = {}
@@ -95,6 +97,13 @@ class Simulation:
                                   for other, other_info in ignore(self.world_info.items(), (creature, creature_info))]
             creature_actions = self.interpret_decisions(creature_decisions)
             self.apply_action(creature, creature_actions)
+
+            # Add fitness to creature based on his actions.
+            # Add 1 for each frame creature is alive.
+            if creature.health:
+                creature.fitness += 1
+            else:
+                self.creature_death(creature)
 
         # Constrains creature to stay in the simulation world, not the screen.
         self.constrain_creatures()
@@ -262,6 +271,7 @@ class Simulation:
         child, child_info = self.new_child(dna)
         self.apply_mutations(child, self.generate_mutations(child))
         self.population[child] = child_info
+        self.catalogue_species()
 
     def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
@@ -369,19 +379,37 @@ class Simulation:
                 self.species[creature] = [creature]
                 uncatalogued_creatures.remove(creature)
 
+    def creature_death(self, creature: Creature) -> None:
+        """
+        Handles the death of a creature.
+        """
+
+        # Choose parents based on creature species, and all creatures fitness'.
+        mother_species = parent_b_species = self.get_species(creature)
+        if random() < INTER_SPECIES_MATE:
+            father_species = choice(ignore(self.species.keys(), creature_species))
+
+
+    def get_species(self, creature: Creature) -> Creature:
+        """
+        Returns the species representative of creature.
+        """
+        for rep, species in self.species.items():
+            if creature in species:
+                return rep
+        print(creature)
+        print(self.species)
+        raise Exception("Shouldn't be reachable")
+
 
 if __name__ == '__main__':
-    s = Simulation()
+    s = Simulation(10)
 
 
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
 
-    a, b = s.population.keys()
-    s.new_birth((a, b))
-    a, b, c = s.population.keys()
-    s.catalogue_species()
-    print(s.genetic_distance(a, b))
-    print(s.genetic_distance(a, c))
-    print(a, b, c)
+    for _ in range(10):
+        s.new_birth((rand_creature(), rand_creature()))
+    s.creature_death(rand_creature())
