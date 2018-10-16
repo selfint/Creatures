@@ -1,6 +1,9 @@
-    # constants.py
+# constants.py
 # Description: constants.
 # ---------------------------------------------------------------------------------------------------------------------
+
+# Debug
+DEBUG = True
 
 # Object strings.
 DNA_STRING = """

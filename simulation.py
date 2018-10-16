@@ -8,9 +8,9 @@ from random import choice, randint, random
 from typing import List, Tuple
 
 # Constants
-from numpy import average
+from numpy import average, math
 
-from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_SCALING, WIDTH
+from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_SCALING, WIDTH, DEBUG
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, \
@@ -101,13 +101,22 @@ class Simulation:
             # Add fitness to creature based on his actions.
             # Add 1 for each frame creature is alive.
             if creature.health:
-                creature.fitness += 1
+                self.update_creature_properties(creature, creature_actions)
+
+                # Aging
+                creature.health -= 1
             else:
                 self.creature_death(creature)
 
         # Constrains creature to stay in the simulation world, not the screen.
         self.constrain_creatures()
         self.update_world()
+
+        if DEBUG:
+            a__debug = max(list(self.population.keys()), key=lambda c: c.fitness)
+            print(a__debug)
+            print(a__debug.fitness)
+
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -389,11 +398,18 @@ class Simulation:
         if random() < INTER_SPECIES_MATE:
             parent_b_species = choice(ignore(self.species, parent_a_species))
         parent_a = choice(self.species[parent_a_species])
-        parent_b = choice(ignore(self.species[parent_b_species], parent_a))
+        try:
+            parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
+                else choice(ignore(self.species[parent_b_species], parent_a_species))
+        except IndexError as ex:
+            print(self.species)
+            print(parent_a_species)
+            raise ex
 
         # Kill creature and birth child.
         del self.population[creature]
         self.new_birth((parent_a, parent_b))
+        # TODO 10/16/18 creature_death: Do not implement speciation in new_birth, configure them statically.
 
     def get_species(self, creature: Creature) -> Creature:
         """
@@ -404,9 +420,18 @@ class Simulation:
                 return rep
         raise Exception("Shouldn't be reachable")
 
+    def update_creature_properties(self, creature: Creature, creature_actions: CreatureActions) -> None:
+        """
+        Updates the creature properties according to its actions.
+        """
+
+        # The more the creature moves, the higher its fitness.
+        distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
+        creature.fitness += distance
+
 
 if __name__ == '__main__':
-    s = Simulation(10)
+    s = Simulation()
 
 
     def rand_creature() -> Creature:

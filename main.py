@@ -13,7 +13,7 @@ from simulation import Simulation
 
 # Run simulation.
 if __name__ == '__main__':
-    simulation = Simulation(400, 400)
+    simulation = Simulation()
     graphics = Graphics(simulation, WIDTH, HEIGHT, CAPTION)
     graphics.run()
     sys.exit(1)
