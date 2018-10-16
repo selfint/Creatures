@@ -18,7 +18,7 @@ from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, 
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, ignore
+from functions import clamp, ignore, flatten
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
@@ -279,7 +279,7 @@ class Simulation:
         child, child_info = self.new_child(dna)
         self.apply_mutations(child, self.generate_mutations(child))
         self.population[child] = child_info
-        self.update_species()
+        self.catalogue_creature(child)
 
     def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
@@ -367,29 +367,33 @@ class Simulation:
                            (c3 * delta_weights)
         return genetic_distance
 
-    def update_species(self):
+    def update_species(self, new_creature: Creature = None) -> None:
         """
         Generates a dictionary with a creature as a key and all creatures in the population that are similar to it,
         including itself. This function is called every time a creature is born. The creature representing a species
         can die, but it will still represent that species until the SPECIES dies.
         """
 
-        # Find all creatures not catalogued into a species.
-        all_creatures = list(self.population.keys())
-        uncatalogued_creatures = [creature for creature in self.population.values() if creature not in all_creatures]
-
         # Check genetic distance from all species representatives, if it is smaller than the threshold catalogue the,
         # creature into that species. If no matching species was found then make a new one with creature as the rep.
+        if new_creature is None:
+            # Find all creatures not catalogued into a species.
+            all_creatures = flatten(list(self.species.values()))
+            uncatalogued_creatures = [creature for creature in self.population if creature not in all_creatures]
+        else:
+            uncatalogued_creatures = [new_creature]
         while uncatalogued_creatures:
             creature = choice(uncatalogued_creatures)
-            for species_representative in self.species:
-                if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
-                    self.species[species_representative].append(creature)
-                    uncatalogued_creatures.remove(creature)
-                    break
-            else:
-                self.species[creature] = [creature]
-                uncatalogued_creatures.remove(creature)
+            self.catalogue_creature(creature)
+            uncatalogued_creatures.remove(creature)
+
+    def catalogue_creature(self, creature: Creature) -> None:
+        for species_representative in self.species:
+            if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
+                self.species[species_representative].append(creature)
+                break
+        else:
+            self.species[creature] = [creature]
 
     def creature_death(self, creature: Creature) -> None:
         """
