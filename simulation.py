@@ -48,7 +48,7 @@ class Simulation:
 
         # Categorize different species.
         self.species = {}
-        self.catalogue_species()
+        self.update_species()
 
         # Generate world.
         self.world_info = {}
@@ -116,7 +116,6 @@ class Simulation:
             a__debug = max(list(self.population.keys()), key=lambda c: c.fitness)
             print(a__debug)
             print(a__debug.fitness)
-
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -280,7 +279,7 @@ class Simulation:
         child, child_info = self.new_child(dna)
         self.apply_mutations(child, self.generate_mutations(child))
         self.population[child] = child_info
-        self.catalogue_species()
+        self.update_species()
 
     def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
@@ -368,15 +367,19 @@ class Simulation:
                            (c3 * delta_weights)
         return genetic_distance
 
-    def catalogue_species(self):
+    def update_species(self):
         """
         Generates a dictionary with a creature as a key and all creatures in the population that are similar to it,
-        including itself. This function is called every frame. It chooses random creatures and assigns species
-        accordingly. This shouldn't be a problem since the species should stay basically the same.
+        including itself. This function is called every time a creature is born. The creature representing a species
+        can die, but it will still represent that species until the SPECIES dies.
         """
-        self.species = {}
-        uncatalogued_creatures = list(self.population.keys())
 
+        # Find all creatures not catalogued into a species.
+        all_creatures = list(self.population.keys())
+        uncatalogued_creatures = [creature for creature in self.population.values() if creature not in all_creatures]
+
+        # Check genetic distance from all species representatives, if it is smaller than the threshold catalogue the,
+        # creature into that species. If no matching species was found then make a new one with creature as the rep.
         while uncatalogued_creatures:
             creature = choice(uncatalogued_creatures)
             for species_representative in self.species:
@@ -409,7 +412,6 @@ class Simulation:
         # Kill creature and birth child.
         del self.population[creature]
         self.new_birth((parent_a, parent_b))
-        # TODO 10/16/18 creature_death: Do not implement speciation in new_birth, configure them statically.
 
     def get_species(self, creature: Creature) -> Creature:
         """
