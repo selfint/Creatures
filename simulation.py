@@ -7,18 +7,18 @@ from copy import deepcopy
 from random import choice, randint, random
 from typing import List, Tuple
 
-# Constants
 from numpy import average, math
 
-from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, HEIGHT, SPEED_SCALING, WIDTH, DEBUG
+# Constants
+from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, HEIGHT, SPEED_SCALING, WIDTH
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
-    CREATURE_INPUTS, CREATURE_OUTPUTS, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, EXCESS_CONSTANT, NODE_MUTATION_RATE, \
-    WEIGHT_MUTATION_RATE, POPULATION_SIZE, CROSSOVER_RATE, DISTANCE_THRESHOLD, INTER_SPECIES_MATE
+    CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
+    EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, ignore, flatten
+from functions import clamp, flatten, ignore
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
