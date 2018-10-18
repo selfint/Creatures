@@ -16,6 +16,7 @@ from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, 
     CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
     EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
 # Objects
+from Constants.types import NodeObject
 from creature import Creature
 from dna import Dna
 from functions import clamp, flatten, ignore
@@ -114,8 +115,6 @@ class Simulation:
 
         if DEBUG:
             a__debug = max(list(self.population.keys()), key=lambda c: c.fitness)
-            print(a__debug)
-            print(a__debug.fitness)
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -320,10 +319,9 @@ class Simulation:
         return child, child_info
 
     @staticmethod
-    def genetic_distance(creature_a: Creature, creature_b: Creature) -> float:
-        """
-        Returns main__a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
-        similar the two creatures are.
+    def compare_genomes(creature_a, creature_b):
+        """"
+        Generate matching, disjoint and excess gene lists for two creature's dna.
         """
         # Get both creatures connection genes. Reminder: Connections is main__a dict => {innovation number: connection}
         a_connections = creature_a.dna.connections
@@ -358,6 +356,15 @@ class Simulation:
             # Excess genes.
             elif a_num or b_num:
                 excess_genes.append(a_num or b_num)
+        return matching_genes, disjoint_genes, excess_genes, max_number, a_connections, b_connections
+
+    def genetic_distance(self, creature_a: Creature, creature_b: Creature) -> float:
+        """
+        Returns main__a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
+        similar the two creatures are.
+        """
+        matching_genes, disjoint_genes, excess_genes, max_number, a_connections, b_connections = self.compare_genomes\
+            (creature_a, creature_b)
 
         # Calculate genetic distance.
         c1, c2, c3 = EXCESS_CONSTANT, DISJOINT_CONSTANT, DELTA_WEIGHT_CONSTANT
@@ -405,15 +412,10 @@ class Simulation:
         if random() < INTER_SPECIES_MATE:
             parent_b_species = choice(ignore(self.species, parent_a_species))
         parent_a = choice(self.species[parent_a_species])
-        try:
-            parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
-                else choice(ignore(self.species[parent_b_species], parent_a_species))
-        except IndexError as ex:
-            print(self.species)
-            print(parent_a_species)
-            raise ex
+        parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
+            else choice(self.species[parent_b_species])
 
-        # Kill creature and birth child.
+        # Kill creature and birth new child.
         del self.population[creature]
         self.new_birth((parent_a, parent_b))
 
@@ -435,12 +437,61 @@ class Simulation:
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
 
+    def crossover(self, parent_a: Creature, parent_b: Creature) -> Dna:
+        """
+        Generates a new child with crossover.
+        """
+
+        # Compare both parent's genes.
+        matching, disjoint, excess, max_number, a_connections, b_connections = self.compare_genomes(parent_a, parent_b)
+        fit_parent = parent_a if parent_a.fitness > parent_b.fitness else parent_b \
+            if parent_a.fitness < parent_b.fitness else None
+        non_matching = disjoint + excess
+
+        # Decide which genes the child will inherit.
+        # For each gene, add the parent it will be inherited from. After everything is decided add the genes.
+        child_gene_sources = dict()
+        for number in matching:
+
+            # Inherit weight from a random parent.
+            if random() < 0.5:
+                child_gene_sources[number] = parent_a
+            else:
+                child_gene_sources[number] = parent_b
+
+        # If there is a fit parent, inherit disjoint and matching genes from it.
+        if fit_parent:
+            for number in non_matching:
+                if number in fit_parent.dna.connections:
+                    child_gene_sources[number] = fit_parent
+
+        # If both parents are equally fit, inherit disjoint and excess genes randomly.
+        else:
+            for number in non_matching:
+                if random() < 0.5 and number in a_connections:
+                    child_gene_sources[number] = parent_a
+                elif number in b_connections:
+                    child_gene_sources[number] = parent_b
+
+        # Add all genes the child should inherit.
+        child_connections = dict()
+        child_nodes = dict()
+        for number, parent in child_gene_sources.items():
+            connection = parent.dna.connections[number]
+            child_connections[number] = connection
+            src_number, dst_number = connection.src_number, connection.dst_number
+            child_nodes[src_number] = parent.dna.nodes[src_number]
+            child_nodes[dst_number] = parent.dna.nodes[dst_number]
+
+        # Generate child.
+        child_dna = Dna(nodes=child_nodes, connections=child_connections)
+        return child_dna
+
 
 if __name__ == '__main__':
     s = Simulation()
 
-
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
-
+    s.crossover(rand_creature(), rand_creature())
