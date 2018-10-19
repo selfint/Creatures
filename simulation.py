@@ -16,7 +16,6 @@ from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, 
     CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
     EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
 # Objects
-from Constants.types import NodeObject
 from creature import Creature
 from dna import Dna
 from functions import clamp, flatten, ignore
@@ -270,8 +269,7 @@ class Simulation:
 
         # Generate child dna from crossover of parents, or pick one of the parent's dna.
         if random() < CROSSOVER_RATE:
-            raise NotImplementedError('Crossover function not built yet.')
-            # Define dna here.
+            dna = self.crossover(*parents)
         else:
             dna = deepcopy(choice(parents).dna)
 
@@ -494,4 +492,5 @@ if __name__ == '__main__':
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
-    s.crossover(rand_creature(), rand_creature())
+
+    s.new_birth((rand_creature(), rand_creature()))
