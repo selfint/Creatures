@@ -29,6 +29,9 @@ class Simulation:
                  creature_scale: float = CREATURE_SCALE):
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
+
+        if DEBUG:
+            self.max_fitness = 0
         self.population_size = population_size
         self.world_width = width
         self.world_height = height
@@ -113,7 +116,7 @@ class Simulation:
         self.update_world()
 
         if DEBUG:
-            a__debug = max(list(self.population.keys()), key=lambda c: c.fitness)
+            pass
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -391,13 +394,23 @@ class Simulation:
         parent_a_species = parent_b_species = self.get_species(creature)
         if random() < INTER_SPECIES_MATE:
             parent_b_species = choice(ignore(self.species, parent_a_species))
+
+        # TODO 10/21/18 creature_death: Add choice based on fitness levels, add fitness sharing here.
         parent_a = choice(self.species[parent_a_species])
         parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
             else choice(self.species[parent_b_species])
 
+        parent_a, parent_b = self.get_parents()
+
+        if DEBUG:
+            if creature.fitness > self.max_fitness:
+                print("New max fitness:", creature.fitness)
+                self.max_fitness = creature.fitness
+
         # Kill creature and birth new child.
         self.new_birth((parent_a, parent_b))
         del self.population[creature]
+
 
     def catalogue_creature(self, creature: Creature) -> None:
         for species_representative in self.species:
@@ -492,6 +505,20 @@ class Simulation:
         # The more the creature moves, the higher its fitness.
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
+
+    def get_parents(self) -> None:
+        """
+        Returns two parents to generate a new child, based on creature and species fitness.
+        """
+        
+        # Adjust fitness levels based on explicit fitness sharing.
+
+        # Choose a species, or maybe receive species.
+
+        # Choose the first parent from the species chosen.
+        # Choose the second one from the same species, unless inter-species mating occurs.
+
+        # Return parents.
 
 
 if __name__ == '__main__':
