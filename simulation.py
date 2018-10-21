@@ -262,22 +262,6 @@ class Simulation:
         """
         creature.update(mutations)
 
-    def new_birth(self, parents: Tuple[Creature, Creature]) -> None:
-        """
-        Generate new creature from two parents, or generate it by mutating one of the parents.
-        """
-
-        # Generate child dna from crossover of parents, or pick one of the parent's dna.
-        if random() < CROSSOVER_RATE:
-            dna = self.crossover(*parents)
-        else:
-            dna = deepcopy(choice(parents).dna)
-
-        child, child_info = self.new_child(dna)
-        self.apply_mutations(child, self.generate_mutations(child))
-        self.population[child] = child_info
-        self.catalogue_creature(child)
-
     def generate_mutations(self, creature: Creature) -> List[MutationObject]:
         """
         Generates mutations for all new creatures, and configures them.
@@ -302,7 +286,23 @@ class Simulation:
                 self.innovation_history.append(innovation)
         return mutations
 
-    def new_child(self, dna: Dna = None) -> Tuple[Creature, CreatureInfo]:
+    def new_birth(self, parents: Tuple[Creature, Creature]) -> None:
+        """
+        Generate new creature from two parents, or generate it by mutating one of the parents.
+        """
+
+        # Generate child dna from crossover of parents, or pick one of the parent's dna.
+        if random() < CROSSOVER_RATE:
+            dna = self.crossover(*parents)
+        else:
+            dna = deepcopy(choice(parents).dna)
+
+        child, child_info = self.new_child(dna, parents)
+        self.apply_mutations(child, self.generate_mutations(child))
+        self.population[child] = child_info
+        self.catalogue_creature(child)
+
+    def new_child(self, dna: Dna = None, parents: Tuple[Creature, Creature] = None) -> Tuple[Creature, CreatureInfo]:
         """
         Generate main__a new creature. Add call to crossover here.
         """
@@ -310,11 +310,102 @@ class Simulation:
         secondary = choice(ignore(CREATURE_COLORS.values(), primary))
 
         # Generate creature and creature info.
-
         child_dna = dna or self.base_dna()[0]
         child = Creature(child_dna, colors=[primary, secondary])
-        child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), self.creature_scale)
+        if parents and False:
+            a, b = parents
+            print(self.population)
+            print(a, b)
+            a_info, b_info = self.population[a], self.population[b]
+            child_info = CreatureInfo((a_info.x + b_info.x)/2, (a_info.y + b_info.y) / 2, self.creature_scale)
+        else:
+            child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), self.creature_scale)
+
         return child, child_info
+
+    def get_species(self, creature: Creature) -> Creature:
+        """
+        Returns the species representative of creature.
+        """
+        for rep, species in self.species.items():
+            if creature in species:
+                return rep
+        raise Exception("Shouldn't be reachable")
+
+    def crossover(self, parent_a: Creature, parent_b: Creature) -> Dna:
+        """
+        Generates a new child with crossover.
+        """
+
+        # Compare both parent's genes.
+        matching, disjoint, excess, max_number, a_connections, b_connections = self.compare_genomes(parent_a, parent_b)
+        fit_parent = parent_a if parent_a.fitness > parent_b.fitness else parent_b \
+            if parent_a.fitness < parent_b.fitness else None
+        non_matching = disjoint + excess
+
+        # Decide which genes the child will inherit.
+        # For each gene, add the parent it will be inherited from. After everything is decided add the genes.
+        child_gene_sources = dict()
+        for number in matching:
+
+            # Inherit weight from a random parent.
+            if random() < 0.5:
+                child_gene_sources[number] = parent_a
+            else:
+                child_gene_sources[number] = parent_b
+
+        # If there is a fit parent, inherit disjoint and matching genes from it.
+        if fit_parent:
+            for number in non_matching:
+                if number in fit_parent.dna.connections:
+                    child_gene_sources[number] = fit_parent
+
+        # If both parents are equally fit, inherit disjoint and excess genes randomly.
+        else:
+            for number in non_matching:
+                if random() < 0.5 and number in a_connections:
+                    child_gene_sources[number] = parent_a
+                elif number in b_connections:
+                    child_gene_sources[number] = parent_b
+
+        # Add all genes the child should inherit.
+        child_connections = dict()
+        child_nodes = dict()
+        for number, parent in child_gene_sources.items():
+            connection = parent.dna.connections[number]
+            child_connections[number] = connection
+            src_number, dst_number = connection.src_number, connection.dst_number
+            child_nodes[src_number] = parent.dna.nodes[src_number]
+            child_nodes[dst_number] = parent.dna.nodes[dst_number]
+
+        # Generate child.
+        child_dna = Dna(nodes=child_nodes, connections=child_connections)
+        return child_dna
+
+    def creature_death(self, creature: Creature) -> None:
+        """
+        Handles the death of a creature.
+        """
+
+        # Choose parents based on creature species, and all creatures fitness'.
+        parent_a_species = parent_b_species = self.get_species(creature)
+        if random() < INTER_SPECIES_MATE:
+            parent_b_species = choice(ignore(self.species, parent_a_species))
+        parent_a = choice(self.species[parent_a_species])
+        parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
+            else choice(self.species[parent_b_species])
+
+        # Kill creature and birth new child.
+        self.new_birth((parent_a, parent_b))
+        del self.population[creature]
+
+    def catalogue_creature(self, creature: Creature) -> None:
+        for species_representative in self.species:
+            if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
+                self.species[species_representative].append(creature)
+                break
+        else:
+            self.species[creature] = [creature]
 
     @staticmethod
     def compare_genomes(creature_a, creature_b):
@@ -392,41 +483,8 @@ class Simulation:
             self.catalogue_creature(creature)
             uncatalogued_creatures.remove(creature)
 
-    def catalogue_creature(self, creature: Creature) -> None:
-        for species_representative in self.species:
-            if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
-                self.species[species_representative].append(creature)
-                break
-        else:
-            self.species[creature] = [creature]
-
-    def creature_death(self, creature: Creature) -> None:
-        """
-        Handles the death of a creature.
-        """
-
-        # Choose parents based on creature species, and all creatures fitness'.
-        parent_a_species = parent_b_species = self.get_species(creature)
-        if random() < INTER_SPECIES_MATE:
-            parent_b_species = choice(ignore(self.species, parent_a_species))
-        parent_a = choice(self.species[parent_a_species])
-        parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
-            else choice(self.species[parent_b_species])
-
-        # Kill creature and birth new child.
-        del self.population[creature]
-        self.new_birth((parent_a, parent_b))
-
-    def get_species(self, creature: Creature) -> Creature:
-        """
-        Returns the species representative of creature.
-        """
-        for rep, species in self.species.items():
-            if creature in species:
-                return rep
-        raise Exception("Shouldn't be reachable")
-
-    def update_creature_properties(self, creature: Creature, creature_actions: CreatureActions) -> None:
+    @staticmethod
+    def update_creature_properties(creature: Creature, creature_actions: CreatureActions) -> None:
         """
         Updates the creature properties according to its actions.
         """
@@ -434,56 +492,6 @@ class Simulation:
         # The more the creature moves, the higher its fitness.
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
-
-    def crossover(self, parent_a: Creature, parent_b: Creature) -> Dna:
-        """
-        Generates a new child with crossover.
-        """
-
-        # Compare both parent's genes.
-        matching, disjoint, excess, max_number, a_connections, b_connections = self.compare_genomes(parent_a, parent_b)
-        fit_parent = parent_a if parent_a.fitness > parent_b.fitness else parent_b \
-            if parent_a.fitness < parent_b.fitness else None
-        non_matching = disjoint + excess
-
-        # Decide which genes the child will inherit.
-        # For each gene, add the parent it will be inherited from. After everything is decided add the genes.
-        child_gene_sources = dict()
-        for number in matching:
-
-            # Inherit weight from a random parent.
-            if random() < 0.5:
-                child_gene_sources[number] = parent_a
-            else:
-                child_gene_sources[number] = parent_b
-
-        # If there is a fit parent, inherit disjoint and matching genes from it.
-        if fit_parent:
-            for number in non_matching:
-                if number in fit_parent.dna.connections:
-                    child_gene_sources[number] = fit_parent
-
-        # If both parents are equally fit, inherit disjoint and excess genes randomly.
-        else:
-            for number in non_matching:
-                if random() < 0.5 and number in a_connections:
-                    child_gene_sources[number] = parent_a
-                elif number in b_connections:
-                    child_gene_sources[number] = parent_b
-
-        # Add all genes the child should inherit.
-        child_connections = dict()
-        child_nodes = dict()
-        for number, parent in child_gene_sources.items():
-            connection = parent.dna.connections[number]
-            child_connections[number] = connection
-            src_number, dst_number = connection.src_number, connection.dst_number
-            child_nodes[src_number] = parent.dna.nodes[src_number]
-            child_nodes[dst_number] = parent.dna.nodes[dst_number]
-
-        # Generate child.
-        child_dna = Dna(nodes=child_nodes, connections=child_connections)
-        return child_dna
 
 
 if __name__ == '__main__':
