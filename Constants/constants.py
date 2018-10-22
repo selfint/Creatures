@@ -48,9 +48,9 @@ CYAN = 0, 255, 255
 PURPLE = 128, 0, 128
 ORANGE = 128, 0, 128
 CREATURE_COLORS = {
-    'RED' : RED,
-    'GREEN' : GREEN,
-    'BLUE' : BLUE,
+    'RED': RED,
+    'GREEN': GREEN,
+    'BLUE': BLUE,
     'PINK': PINK,
     'CYAN': CYAN,
     'PURPLE': PURPLE,

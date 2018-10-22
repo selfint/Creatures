@@ -14,7 +14,7 @@ from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, HEIGHT, 
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
-    EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
+    EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, GENERATION_TIME
 # Objects
 from creature import Creature
 from dna import Dna
@@ -24,11 +24,11 @@ from node import InputNode, OutputNode
 
 
 class Simulation:
-
     species: Dict[Creature, List[Creature]]
 
     def __init__(self, population_size: int = POPULATION_SIZE, width: int = WIDTH, height: int = WIDTH,
                  creature_scale: float = CREATURE_SCALE):
+        self.generation_time = GENERATION_TIME
         self.colors = self.new_color()
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
@@ -55,6 +55,7 @@ class Simulation:
         # Categorize different species.
         self.species = {}
         self.update_species()
+        print(len(self.species))
 
         # Generate world.
         self.world_info = {}
@@ -98,21 +99,19 @@ class Simulation:
         """
 
         # Get creature's thoughts about all other creatures.
-        for creature, creature_info in self.population.items():
-            creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
-                                  for other, other_info in ignore(self.world_info.items(), (creature, creature_info))]
-            creature_actions = self.interpret_decisions(creature_decisions)
-            self.apply_action(creature, creature_actions)
+        if self.generation_time > 0:
+            for creature, creature_info in self.population.items():
+                creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
+                                      for other, other_info in ignore(self.world_info.items(), (creature, creature_info))]
+                creature_actions = self.interpret_decisions(creature_decisions)
+                self.apply_action(creature, creature_actions)
 
-            # Add fitness to creature based on his actions.
-            # Add 1 for each frame creature is alive.
-            if creature.health:
+                # Add fitness to creature based on his actions.
+                # Add 1 for each frame creature is alive.
                 self.update_creature_properties(creature, creature_actions)
-
-                # Aging
-                creature.health -= random() * 0.5 + 0.5
-            else:
-                self.creature_death(creature)
+                self.generation_time -= 1
+        else:
+            self.new_generation()
 
         # Constrains creature to stay in the simulation world, not the screen.
         self.constrain_creatures()
@@ -323,7 +322,7 @@ class Simulation:
             print(self.population)
             print(a, b)
             a_info, b_info = self.population[a], self.population[b]
-            child_info = CreatureInfo((a_info.x + b_info.x)/2, (a_info.y + b_info.y) / 2, self.creature_scale)
+            child_info = CreatureInfo((a_info.x + b_info.x) / 2, (a_info.y + b_info.y) / 2, self.creature_scale)
         else:
             child_info = CreatureInfo(randint(0, self.world_width), randint(0, self.world_height), self.creature_scale)
 
@@ -393,15 +392,7 @@ class Simulation:
         Handles the death of a creature.
         """
 
-        # Choose parents based on creature species, and all creatures fitness'.
-        parent_a_species = parent_b_species = self.get_species(creature)
-        if random() < INTER_SPECIES_MATE:
-            parent_b_species = choice(ignore(self.species, parent_a_species))
-
-        # parent_a = choice(self.species[parent_a_species])
-        # parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
-        #     else choice(self.species[parent_b_species])
-
+        # Choose parents.
         parent_a, parent_b = self.get_parents()
 
         if DEBUG:
@@ -420,7 +411,7 @@ class Simulation:
                 self.species[species_representative].append(creature)
                 break
         else:
-            creature.colors = self.colors.next()
+            creature.colors = next(self.colors)
             self.species[creature] = [creature]
 
     @staticmethod
@@ -468,7 +459,7 @@ class Simulation:
         Returns main__a float between 0 and 1, shows how similar two creatures are. They lower this value is, the more
         similar the two creatures are.
         """
-        matching_genes, disjoint_genes, excess_genes, max_number, a_connections, b_connections = self.compare_genomes\
+        matching_genes, disjoint_genes, excess_genes, max_number, a_connections, b_connections = self.compare_genomes \
             (creature_a, creature_b)
 
         # Calculate genetic distance.
@@ -514,10 +505,10 @@ class Simulation:
         Returns two parents to generate a new child, based on creature and species fitness.
         In the future the creatures should learn how to do this.
         """
-        
+
         # Adjust fitness levels based on explicit fitness sharing.
         fitness_levels = dict()
-        for rep, species in self.species:
+        for rep, species in self.species.items():
             fitness_levels[rep] = dict()
 
             # Each creatures fitness is divided by the amount of creatures in its species.
@@ -526,24 +517,44 @@ class Simulation:
 
         # Choose a species.
         # TODO 10/22/18 get_parents: Use numpy weighted choice.
-        a_species = choice(self.species)
+        a_species = choice(list(self.species.keys()))
 
         # Choose the first parent from the species chosen.
         # Choose the second one from the same species, unless inter-species mating occurs.
-        b_species = choice(ignore(self.species, a_species)) if random() < INTER_SPECIES_MATE else a_species
+        b_species = choice(ignore(list(self.species.keys()), a_species)) if random() < INTER_SPECIES_MATE else a_species
 
         # Return parents.
-        parent_a = choice(a_species)
-        parent_b = choice(ignore(b_species, parent_a))
-        return (parent_a, parent_b)
+        parent_a = choice(self.species[a_species])
+        parent_b = choice(ignore(self.species[b_species], parent_a))
+        return parent_a, parent_b
 
     def new_color(self):
         """
         Generates a new, unused color for a species.
         """
-        known_colors = []
-        new_pair = choice(CREATURE_COLORS), choice(CREATURE_COLORS)
+        known_colors = dict()
 
+        # First colors.
+        new_p, new_s = choice(list(CREATURE_COLORS.values())), choice(list(CREATURE_COLORS.values()))
+        known_colors[new_p] = [new_s]
+        done_colors = []
+        yield new_p, new_s
+        while True:
+            new_p = choice(ignore(list(CREATURE_COLORS.values()), done_colors))
+            if new_p in known_colors:
+                if len(known_colors[new_p]) == len(CREATURE_COLORS) - 2:
+                    done_colors.append(new_p)
+                new_s = choice(ignore(list(CREATURE_COLORS.values()), known_colors[new_p]))
+                known_colors[new_p].append(new_s)
+            else:
+                known_colors[new_p] = [new_s]
+
+            yield new_p, new_s
+
+    def new_generation(self):
+        """
+        Generates a new generation based on the fitness levels of each creature and each species.
+        """
 
 
 
@@ -551,8 +562,13 @@ class Simulation:
 if __name__ == '__main__':
     s = Simulation()
 
+
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
 
     s.new_birth((rand_creature(), rand_creature()))
+
+    a = s.new_color()
+    for i in range(10):
+        print(next(a))
