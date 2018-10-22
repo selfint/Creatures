@@ -5,7 +5,7 @@
 # Imports
 from copy import deepcopy
 from random import choice, randint, random
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 from numpy import average, math
 
@@ -25,8 +25,11 @@ from node import InputNode, OutputNode
 
 class Simulation:
 
+    species: Dict[Creature, List[Creature]]
+
     def __init__(self, population_size: int = POPULATION_SIZE, width: int = WIDTH, height: int = WIDTH,
                  creature_scale: float = CREATURE_SCALE):
+        self.colors = self.new_color()
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
 
@@ -107,7 +110,7 @@ class Simulation:
                 self.update_creature_properties(creature, creature_actions)
 
                 # Aging
-                creature.health -= 1
+                creature.health -= random() * 0.5 + 0.5
             else:
                 self.creature_death(creature)
 
@@ -395,10 +398,9 @@ class Simulation:
         if random() < INTER_SPECIES_MATE:
             parent_b_species = choice(ignore(self.species, parent_a_species))
 
-        # TODO 10/21/18 creature_death: Add choice based on fitness levels, add fitness sharing here.
-        parent_a = choice(self.species[parent_a_species])
-        parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
-            else choice(self.species[parent_b_species])
+        # parent_a = choice(self.species[parent_a_species])
+        # parent_b = choice(self.species[parent_a_species]) if len(self.species) == 1 \
+        #     else choice(self.species[parent_b_species])
 
         parent_a, parent_b = self.get_parents()
 
@@ -411,13 +413,14 @@ class Simulation:
         self.new_birth((parent_a, parent_b))
         del self.population[creature]
 
-
     def catalogue_creature(self, creature: Creature) -> None:
         for species_representative in self.species:
             if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
+                creature.colors = species_representative.colors
                 self.species[species_representative].append(creature)
                 break
         else:
+            creature.colors = self.colors.next()
             self.species[creature] = [creature]
 
     @staticmethod
@@ -506,19 +509,43 @@ class Simulation:
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
 
-    def get_parents(self) -> None:
+    def get_parents(self) -> Tuple[Creature, Creature]:
         """
         Returns two parents to generate a new child, based on creature and species fitness.
+        In the future the creatures should learn how to do this.
         """
         
         # Adjust fitness levels based on explicit fitness sharing.
+        fitness_levels = dict()
+        for rep, species in self.species:
+            fitness_levels[rep] = dict()
 
-        # Choose a species, or maybe receive species.
+            # Each creatures fitness is divided by the amount of creatures in its species.
+            for creature in species:
+                fitness_levels[rep][creature] = creature.fitness / len(species)
+
+        # Choose a species.
+        # TODO 10/22/18 get_parents: Use numpy weighted choice.
+        a_species = choice(self.species)
 
         # Choose the first parent from the species chosen.
         # Choose the second one from the same species, unless inter-species mating occurs.
+        b_species = choice(ignore(self.species, a_species)) if random() < INTER_SPECIES_MATE else a_species
 
         # Return parents.
+        parent_a = choice(a_species)
+        parent_b = choice(ignore(b_species, parent_a))
+        return (parent_a, parent_b)
+
+    def new_color(self):
+        """
+        Generates a new, unused color for a species.
+        """
+        known_colors = []
+        new_pair = choice(CREATURE_COLORS), choice(CREATURE_COLORS)
+
+
+
 
 
 if __name__ == '__main__':
