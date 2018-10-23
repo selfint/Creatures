@@ -5,8 +5,9 @@
 # Imports
 from copy import deepcopy
 from random import choice, randint, random
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict
 
+import numpy as np
 from numpy import average, math
 
 # Constants
@@ -14,7 +15,8 @@ from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, HEIGHT, 
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
-    EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, GENERATION_TIME
+    EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, GENERATION_TIME, \
+    BOTTOM_PERCENT, BIG_SPECIES, NEW_CHILDREN
 # Objects
 from creature import Creature
 from dna import Dna
@@ -112,6 +114,7 @@ class Simulation:
                 self.generation_time -= 1
         else:
             self.new_generation()
+            self.generation_time = GENERATION_TIME
 
         # Constrains creature to stay in the simulation world, not the screen.
         self.constrain_creatures()
@@ -291,7 +294,7 @@ class Simulation:
                 self.innovation_history.append(innovation)
         return mutations
 
-    def new_birth(self, parents: Tuple[Creature, Creature]) -> None:
+    def new_birth(self, parents: Tuple[Creature, Creature]) -> Tuple[Creature, CreatureInfo]:
         """
         Generate new creature from two parents, or generate it by mutating one of the parents.
         """
@@ -304,7 +307,17 @@ class Simulation:
 
         child, child_info = self.new_child(dna, parents)
         self.apply_mutations(child, self.generate_mutations(child))
+
+        # TODO 10/23/18 new_birth: Maybe move apply mutatoins to new child.
+        return child, child_info
+
+    def add_child(self, child: Creature, child_info: CreatureInfo) -> None:
+        """
+        Adds a child to the population
+        """
         self.population[child] = child_info
+
+        # Assign the child to a species.
         self.catalogue_creature(child)
 
     def new_child(self, dna: Dna = None, parents: Tuple[Creature, Creature] = None) -> Tuple[Creature, CreatureInfo]:
@@ -318,9 +331,8 @@ class Simulation:
         child_dna = dna or self.base_dna()[0]
         child = Creature(child_dna, colors=[primary, secondary])
         if parents and False:
+            # TODO 10/23/18 new_child: Finish this part.
             a, b = parents
-            print(self.population)
-            print(a, b)
             a_info, b_info = self.population[a], self.population[b]
             child_info = CreatureInfo((a_info.x + b_info.x) / 2, (a_info.y + b_info.y) / 2, self.creature_scale)
         else:
@@ -401,7 +413,7 @@ class Simulation:
                 self.max_fitness = creature.fitness
 
         # Kill creature and birth new child.
-        self.new_birth((parent_a, parent_b))
+        self.add_child(*self.new_birth((parent_a, parent_b)))
         del self.population[creature]
 
     def catalogue_creature(self, creature: Creature) -> None:
@@ -500,7 +512,7 @@ class Simulation:
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
 
-    def get_parents(self) -> Tuple[Creature, Creature]:
+    def get_parents(self, species_rep: Creature = None) -> Tuple[Creature, Creature]:
         """
         Returns two parents to generate a new child, based on creature and species fitness.
         In the future the creatures should learn how to do this.
@@ -551,12 +563,50 @@ class Simulation:
 
             yield new_p, new_s
 
-    def new_generation(self):
+    def new_generation(self, new_creature: int = 0) -> None:
         """
         Generates a new generation based on the fitness levels of each creature and each species.
         """
 
+        # Kill bottom percent of each species.
+        survivors = dict(self.species)
+        for rep, species in survivors.items():
+            survivors[rep] = sorted(species, key=lambda c: c.fitness)[int(len(species) * BOTTOM_PERCENT):]
 
+        species_fitness = dict()
+
+        # Adjust fitness levels based on explicit fitness sharing.
+        fitness_levels = dict()
+        for rep, species in survivors.items():
+            fitness_levels[rep] = dict()
+
+            # Each creatures fitness is divided by the amount of creatures in its species.
+            for creature in species:
+                fitness_levels[rep][creature] = creature.fitness / len(species)
+
+        # The fitness of a species is the sum of all the adjusted fitness levels of its creatures.
+        for rep, species in survivors.items():
+            species_fitness[rep] = sum([fitness_levels[rep][creature] for creature in species])
+
+        # Generate new generation using survivors as parents.
+        new_generation = dict()
+        for rep, species in survivors.items():
+            new_species = []
+
+            # Species with more than BIG SPECIES amount of networks keep their champion.
+            if len(new_species) > BIG_SPECIES:
+                champion = max(species, key=lambda c: c.fitness)
+                new_species.append(champion)
+            for i in range(len(species) + NEW_CHILDREN):
+                mate_species = rep
+                if random() < INTER_SPECIES_MATE:
+                    mate_species = np.random.choice(survivors, p=list(species_fitness.values()))
+                parent_a = np.random.choice(species, p=fitness_levels[rep])
+                mate_p = [fitness_levels[mate_species][creature]
+                          for creature in fitness_levels[mate_species] if creature is not parent_a]
+                parent_b = np.random.choice(ignore(mate_species, parent_a), p=mate_p)
+                child, child_info = self.new_birth((parent_a, parent_b))
+                # TODO 10/23/18 new_generation: Add new child to new generation population and species.
 
 
 if __name__ == '__main__':
@@ -566,9 +616,5 @@ if __name__ == '__main__':
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
-
-    s.new_birth((rand_creature(), rand_creature()))
-
-    a = s.new_color()
-    for i in range(10):
-        print(next(a))
+    for _ in range(1000):
+        s.update()
