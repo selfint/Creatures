@@ -20,7 +20,7 @@ from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, 
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, flatten, ignore
+from functions import clamp, flatten, ignore, normalize, sum_one
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
@@ -57,7 +57,6 @@ class Simulation:
         # Categorize different species.
         self.species = {}
         self.update_species()
-        print(len(self.species))
 
         # Generate world.
         self.world_info = {}
@@ -104,14 +103,15 @@ class Simulation:
         if self.generation_time > 0:
             for creature, creature_info in self.population.items():
                 creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
-                                      for other, other_info in ignore(self.world_info.items(), (creature, creature_info))]
+                                      for other, other_info in
+                                      ignore(self.world_info.items(), (creature, creature_info))]
                 creature_actions = self.interpret_decisions(creature_decisions)
                 self.apply_action(creature, creature_actions)
 
                 # Add fitness to creature based on his actions.
                 # Add 1 for each frame creature is alive.
                 self.update_creature_properties(creature, creature_actions)
-                self.generation_time -= 1
+            self.generation_time -= 1
         else:
             self.new_generation()
             self.generation_time = GENERATION_TIME
@@ -308,7 +308,6 @@ class Simulation:
         child, child_info = self.new_child(dna, parents)
         self.apply_mutations(child, self.generate_mutations(child))
 
-        # TODO 10/23/18 new_birth: Maybe move apply mutatoins to new child.
         return child, child_info
 
     def add_child(self, child: Creature, child_info: CreatureInfo) -> None:
@@ -512,7 +511,7 @@ class Simulation:
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
 
-    def get_parents(self, species_rep: Creature = None) -> Tuple[Creature, Creature]:
+    def get_parents(self) -> Tuple[Creature, Creature]:
         """
         Returns two parents to generate a new child, based on creature and species fitness.
         In the future the creatures should learn how to do this.
@@ -563,7 +562,7 @@ class Simulation:
 
             yield new_p, new_s
 
-    def new_generation(self, new_creature: int = 0) -> None:
+    def new_generation(self) -> None:
         """
         Generates a new generation based on the fitness levels of each creature and each species.
         """
@@ -599,14 +598,27 @@ class Simulation:
                 new_species.append(champion)
             for i in range(len(species) + NEW_CHILDREN):
                 mate_species = rep
+
+                # Choose parent a.
+                parent_a_probabilities = sum_one(list(fitness_levels[rep].values()))
+                parent_a = np.random.choice(species, p=parent_a_probabilities)
+                species_p = sum_one(species_fitness.values())
                 if random() < INTER_SPECIES_MATE:
-                    mate_species = np.random.choice(survivors, p=list(species_fitness.values()))
-                parent_a = np.random.choice(species, p=fitness_levels[rep])
-                mate_p = [fitness_levels[mate_species][creature]
-                          for creature in fitness_levels[mate_species] if creature is not parent_a]
-                parent_b = np.random.choice(ignore(mate_species, parent_a), p=mate_p)
+                    mate_species = np.random.choice(survivors, p=species_p)
+
+                # Choose parent b.
+                parent_b_probabilities = sum_one([fitness_levels[mate_species][creature]
+                                                  for creature in fitness_levels[mate_species].keys()
+                                                  if creature is not parent_a])
+                parent_b_options = ignore(survivors[mate_species], parent_a)
+
+                # If mate species contains only one creature, it will mate with itself.
+                if not parent_b_options:
+                    parent_b_options = survivors[mate_species]
+                parent_b = np.random.choice(parent_b_options, p=parent_b_probabilities)
                 child, child_info = self.new_birth((parent_a, parent_b))
-                # TODO 10/23/18 new_generation: Add new child to new generation population and species.
+                new_generation[child] = child_info
+        print('done', new_generation)
 
 
 if __name__ == '__main__':
@@ -616,5 +628,7 @@ if __name__ == '__main__':
     def rand_creature() -> Creature:
         return choice(list(s.population))
 
-    for _ in range(1000):
+
+    for _ in range(200):
         s.update()
+    s.new_generation()

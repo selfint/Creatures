@@ -1,7 +1,7 @@
 # functions.py
 # Description: functions.
 # ---------------------------------------------------------------------------------------------------------------------
-from typing import List, Dict, Iterable
+from typing import List, Dict, Iterable, Union
 from random import gauss, random, choice, randint
 
 
@@ -84,7 +84,21 @@ def ignore(iterable: Iterable, *args) -> list:
     """
     Returns the list without any elements that are in args.
     """
-    return [_ for _ in iterable if _ not in args]
+    return [element for element in iterable if element not in args]
+
+
+def normalize(array: List[Union[int, float]]) -> list:
+    """
+    Normalize an array of floats or ints.
+    """
+    return [element / max(array) for element in array]
+
+
+def sum_one(array: Iterable) -> list:
+    """
+    Makes all numbers in an array sum to 1.
+    """
+    return [element / sum(array) for element in array]
 
 
 if __name__ == '__main__':
