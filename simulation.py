@@ -20,7 +20,7 @@ from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, 
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, flatten, ignore, normalize, sum_one
+from functions import clamp, flatten, ignore, normalize, sum_one, wrap
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
@@ -122,10 +122,9 @@ class Simulation:
             self.generation_time = GENERATION_TIME
             self.generation += 1
 
-        # Constrains creature to stay in the simulation world, not the screen.
-        self.constrain_creatures()
+        # Simulate a round world for the creatures.
+        self.wrap_creatures()
         self.update_world()
-
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -187,6 +186,14 @@ class Simulation:
         for creature_info in self.population.values():
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
+
+    def wrap_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = WIDTH, y_max: int = HEIGHT) -> None:
+        """
+        Simulates a round world.
+        """
+        for creature_info in self.population.values():
+            creature_info.x = wrap(creature_info.x, x_min, x_max)
+            creature_info.y = wrap(creature_info.y, y_min, y_max)
 
     @staticmethod
     def weight_mutation(creature: Creature) -> WeightMutation:

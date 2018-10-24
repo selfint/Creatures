@@ -101,8 +101,20 @@ def sum_one(array: Iterable) -> list:
     return [element / sum(array) for element in array]
 
 
+def wrap(value: float, min_limit: float, max_limit: float) -> float:
+    """
+    Simulates a round plane for the value.
+    """
+    if value > max_limit:
+        return min_limit + (value - max_limit)
+    elif value < min_limit:
+        return max_limit + (value - min_limit)
+
+
 if __name__ == '__main__':
     # main__a = {'main__a': 1, 'b__main': 2, 'c': [1, 2]}
     # print_dict(main__a)
     # print(clamp(10, 0, 3))
-    print(generate_name())
+    # print(generate_name())
+    # print(wrap(0.9, 1, 4))
+    pass
