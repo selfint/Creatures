@@ -113,7 +113,8 @@ class Simulation:
                 self.update_creature_properties(creature, creature_actions)
             self.generation_time -= 1
         else:
-            self.new_generation()
+            self.population = self.new_generation()
+            self.catalogue_creature()
             self.generation_time = GENERATION_TIME
 
         # Constrains creature to stay in the simulation world, not the screen.
@@ -329,7 +330,7 @@ class Simulation:
         # Generate creature and creature info.
         child_dna = dna or self.base_dna()[0]
         child = Creature(child_dna, colors=[primary, secondary])
-        if parents and False:
+        if parents:
             # TODO 10/23/18 new_child: Finish this part.
             a, b = parents
             a_info, b_info = self.population[a], self.population[b]
@@ -562,7 +563,7 @@ class Simulation:
 
             yield new_p, new_s
 
-    def new_generation(self) -> None:
+    def new_generation(self) -> Dict[Creature, CreatureInfo]:
         """
         Generates a new generation based on the fitness levels of each creature and each species.
         """
@@ -597,29 +598,32 @@ class Simulation:
                 champion = max(species, key=lambda c: c.fitness)
                 new_species.append(champion)
             for i in range(len(species) + NEW_CHILDREN):
-                mate_species = rep
+                parent_b_species = rep
 
                 # Choose parent a.
                 parent_a_probabilities = sum_one(list(fitness_levels[rep].values()))
                 parent_a = np.random.choice(species, p=parent_a_probabilities)
                 species_p = sum_one(species_fitness.values())
                 if random() < INTER_SPECIES_MATE:
-                    mate_species = np.random.choice(survivors, p=species_p)
+                    parent_b_species = np.random.choice(survivors, p=species_p)
 
                 # Choose parent b.
-                parent_b_probabilities = sum_one([fitness_levels[mate_species][creature]
-                                                  for creature in fitness_levels[mate_species].keys()
-                                                  if creature is not parent_a])
-                parent_b_options = ignore(survivors[mate_species], parent_a)
+                parent_b_options = ignore(survivors[parent_b_species], parent_a)
 
                 # If mate species contains only one creature, it will mate with itself.
                 if not parent_b_options:
-                    parent_b_options = survivors[mate_species]
+                    parent_b_options = survivors[parent_b_species]
+                parent_b_probabilities = sum_one([fitness_levels[parent_b_species][creature]
+                                                  for creature in parent_b_options])
+                if DEBUG:
+                    if len(parent_b_options) != len(parent_b_probabilities):
+                        print('parent_b_options', parent_b_options)
+                        print('parent_b_probabilities', parent_b_probabilities)
                 parent_b = np.random.choice(parent_b_options, p=parent_b_probabilities)
                 child, child_info = self.new_birth((parent_a, parent_b))
                 new_generation[child] = child_info
-        print('done', new_generation)
 
+        return new_generation
 
 if __name__ == '__main__':
     s = Simulation()
