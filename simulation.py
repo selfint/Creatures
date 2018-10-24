@@ -31,6 +31,7 @@ class Simulation:
     def __init__(self, population_size: int = POPULATION_SIZE, width: int = WIDTH, height: int = WIDTH,
                  creature_scale: float = CREATURE_SCALE):
         self.generation_time = GENERATION_TIME
+        self.generation = 1
         self.colors = self.new_color()
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
@@ -113,16 +114,18 @@ class Simulation:
                 self.update_creature_properties(creature, creature_actions)
             self.generation_time -= 1
         else:
+            if DEBUG:
+                print('Generation', self.generation, 'population', len(self.population),
+                      'best fitness:', max(self.population, key=lambda c: c.fitness).fitness)
             self.population = self.new_generation()
-            self.catalogue_creature()
+            self.update_species()
             self.generation_time = GENERATION_TIME
+            self.generation += 1
 
         # Constrains creature to stay in the simulation world, not the screen.
         self.constrain_creatures()
         self.update_world()
 
-        if DEBUG:
-            pass
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -491,6 +494,7 @@ class Simulation:
 
         # Check genetic distance from all species representatives, if it is smaller than the threshold catalogue the,
         # creature into that species. If no matching species was found then make a new one with creature as the rep.
+        self.species = dict()
         if new_creature is None:
             # Find all creatures not catalogued into a species.
             all_creatures = flatten(list(self.species.values()))
@@ -625,6 +629,7 @@ class Simulation:
 
         return new_generation
 
+
 if __name__ == '__main__':
     s = Simulation()
 
@@ -633,6 +638,5 @@ if __name__ == '__main__':
         return choice(list(s.population))
 
 
-    for _ in range(200):
+    while True:
         s.update()
-    s.new_generation()
