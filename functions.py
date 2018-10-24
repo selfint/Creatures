@@ -109,6 +109,7 @@ def wrap(value: float, min_limit: float, max_limit: float) -> float:
         return min_limit + (value - max_limit)
     elif value < min_limit:
         return max_limit + (value - min_limit)
+    return value
 
 
 if __name__ == '__main__':

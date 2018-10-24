@@ -11,7 +11,7 @@ import numpy as np
 from numpy import average, math
 
 # Constants
-from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, HEIGHT, SPEED_SCALING, WIDTH
+from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, HEIGHT, SPEED_SCALING, WIDTH, TEXT_INFORMATION
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
     CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
@@ -36,8 +36,7 @@ class Simulation:
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
 
-        if DEBUG:
-            self.max_fitness = 0
+        self.max_fitness = 0
         self.population_size = population_size
         self.world_width = width
         self.world_height = height
@@ -114,8 +113,8 @@ class Simulation:
                 self.update_creature_properties(creature, creature_actions)
             self.generation_time -= 1
         else:
-            if DEBUG:
-                print('Generation', self.generation, 'population', len(self.population),
+            if TEXT_INFORMATION:
+                print('Generation', self.generation, 'population', len(self.population), '(', len(self.species), 'species)',
                       'best fitness:', max(self.population, key=lambda c: c.fitness).fitness)
             self.population = self.new_generation()
             self.update_species()
@@ -626,10 +625,6 @@ class Simulation:
                     parent_b_options = survivors[parent_b_species]
                 parent_b_probabilities = sum_one([fitness_levels[parent_b_species][creature]
                                                   for creature in parent_b_options])
-                if DEBUG:
-                    if len(parent_b_options) != len(parent_b_probabilities):
-                        print('parent_b_options', parent_b_options)
-                        print('parent_b_probabilities', parent_b_probabilities)
                 parent_b = np.random.choice(parent_b_options, p=parent_b_probabilities)
                 child, child_info = self.new_birth((parent_a, parent_b))
                 new_generation[child] = child_info

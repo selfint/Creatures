@@ -10,7 +10,7 @@ import pygame
 from pygame import gfxdraw
 
 # Constants
-from Constants.constants import BACKGROUND, BLACK, CENTER, FRAME_RATE, GREY, RED, SIMULATION_BACKGROUND
+from Constants.constants import BACKGROUND, BLACK, CENTER, FRAME_RATE, GREY, RED, SIMULATION_BACKGROUND, CAMERA_SPEED
 from Constants.types import COLOR
 # Objects
 from creature import Creature
@@ -99,13 +99,13 @@ class Graphics:
                 # Camera movement.
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        self.camera_dx = -1
+                        self.camera_dx = -CAMERA_SPEED
                     elif event.key == pygame.K_UP:
-                        self.camera_dy = -1
+                        self.camera_dy = -CAMERA_SPEED
                     elif event.key == pygame.K_RIGHT:
-                        self.camera_dx = 1
+                        self.camera_dx = CAMERA_SPEED
                     elif event.key == pygame.K_DOWN:
-                        self.camera_dy = 1
+                        self.camera_dy = CAMERA_SPEED
                 elif event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         self.camera_dx = 0
