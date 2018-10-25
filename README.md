@@ -19,3 +19,4 @@ If the creatures divide into tribes on their own, that will be nice.
 If the creatures attack as a group that would be amazing, but this is unlikely.
 Seeing if adding one or two output node, that will be "seen" by each creature receiving this creature as input will lead to
 some sort of benefit in the species' success. This is very unlikely but interesting nonetheless.
+
