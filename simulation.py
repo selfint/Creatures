@@ -5,30 +5,29 @@
 # Imports
 from copy import deepcopy
 from random import choice, randint, random
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 import numpy as np
 from numpy import average, math
 
 # Constants
-from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, HEIGHT, SPEED_SCALING, WIDTH, TEXT_INFORMATION
+from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, SIMULATION_HEIGHT, SPEED_SCALING, TEXT_INFORMATION, SIMULATION_WIDTH
 from Constants.data_structures import CreatureActions, CreatureInfo, CreatureNetworkInput, CreatureNetworkOutput
-from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, CONNECTION_MUTATION_RATE, \
-    CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, DISJOINT_CONSTANT, DISTANCE_THRESHOLD, \
-    EXCESS_CONSTANT, INTER_SPECIES_MATE, NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, GENERATION_TIME, \
-    BOTTOM_PERCENT, BIG_SPECIES, NEW_CHILDREN
+from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
+    CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, \
+    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, GENERATION_TIME, INTER_SPECIES_MATE, NEW_CHILDREN, \
+    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, flatten, ignore, normalize, sum_one, wrap
+from functions import clamp, flatten, ignore, sum_one, wrap
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
 
 class Simulation:
-    species: Dict[Creature, List[Creature]]
 
-    def __init__(self, population_size: int = POPULATION_SIZE, width: int = WIDTH, height: int = WIDTH,
+    def __init__(self, population_size: int = POPULATION_SIZE, width: int = SIMULATION_WIDTH, height: int = SIMULATION_WIDTH,
                  creature_scale: float = CREATURE_SCALE):
         self.generation_time = GENERATION_TIME
         self.generation = 1
@@ -178,7 +177,7 @@ class Simulation:
         network_input = CreatureNetworkInput(dx, dy)
         return network_input
 
-    def constrain_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = WIDTH, y_max: int = HEIGHT) -> None:
+    def constrain_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH, y_max: int = SIMULATION_HEIGHT) -> None:
         """
         Makes sure all creatures stay within given borders (default is screen size).
         """
@@ -186,7 +185,7 @@ class Simulation:
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
 
-    def wrap_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = WIDTH, y_max: int = HEIGHT) -> None:
+    def wrap_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH, y_max: int = SIMULATION_HEIGHT) -> None:
         """
         Simulates a round world.
         """

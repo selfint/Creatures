@@ -32,13 +32,14 @@ CREATURE_STRING = "{} ({} Hidden)"
 
 # Graphics.
 CAPTION = 'Creatures'
-WIDTH, HEIGHT = 800, 600
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
+SIMULATION_WIDTH, SIMULATION_HEIGHT = 400, 400
 SPEED_SCALING = 0.1
 CREATURE_SCALE = 0.05
 FRAME_RATE = 200
 CAMERA_SPEED = 3
+WORLD_BORDER = 5
 CENTER = 0  # Defines drawing ellipse from their center.
-# Will be used to visually differentiate between species.
 BLACK = 0, 0, 0
 GREY = 125, 125, 125
 WHITE = 255, 255, 255
@@ -51,6 +52,8 @@ PINK = 255, 0, 255
 CYAN = 0, 255, 255
 PURPLE = 128, 0, 128
 ORANGE = 128, 0, 128
+
+# Will be used to visually differentiate between species.
 CREATURE_COLORS = {
     'RED': RED,
     'GREEN': GREEN,
