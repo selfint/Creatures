@@ -9,7 +9,7 @@ from collections import namedtuple
 # Data structures.
 # - Creature -
 # Creature information is mutable, so cant use named tuple
-class CreatureInfo:
+class CreatureLocation:
 
     def __init__(self, x: float, y: float, scale: float):
         self.x = x
@@ -21,6 +21,8 @@ class CreatureInfo:
 
     def __repr__(self):
         return str(self)
+
+
 
 
 CreatureNetworkInput = namedtuple('CreatureNetworkInput', 'dx dy')

@@ -30,7 +30,7 @@ class Network:
             node.reset_node()
 
         for node, value in zip(self.input_nodes, network_inputs):
-           node.set_input(value)
+            node.set_input(value)
         return [self.get_node_output(node) for node in self.output_nodes]
 
     def get_node_output(self, node: NodeObject,
@@ -50,7 +50,7 @@ class Network:
         input_connections = [input_connection for input_connection in input_connections
                              if input_connection.number not in prev_connections]
         prev_connections.update(set(input_connection.number
-                              for input_connection in input_connections))
+                                    for input_connection in input_connections))
 
         # Get each input nodes output and corresponding weight.
         inputs = [self.get_node_output(self.nodes[input_connection.src_number], prev_connections)

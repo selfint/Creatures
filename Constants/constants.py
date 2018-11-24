@@ -4,8 +4,6 @@
 
 # Debug
 DEBUG = True
-
-# Display textual information about simulation.
 TEXT_INFORMATION = True
 
 # Object strings.
@@ -32,8 +30,9 @@ CREATURE_STRING = "{} ({} Hidden)"
 
 # Graphics.
 CAPTION = 'Creatures'
+TEXT_ONLY = True
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
-SIMULATION_WIDTH, SIMULATION_HEIGHT = 400, 400
+SIMULATION_WIDTH, SIMULATION_HEIGHT = 800, 600
 SPEED_SCALING = 0.1
 CREATURE_SCALE = 0.05
 FRAME_RATE = 200

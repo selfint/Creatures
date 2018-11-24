@@ -10,8 +10,8 @@ import pygame
 from pygame import gfxdraw
 
 # Constants
-from Constants.constants import BACKGROUND, BLACK, CAMERA_SPEED, CENTER, FRAME_RATE, GREY, SIMULATION_BACKGROUND, \
-    WORLD_BORDER, WINDOW_WIDTH, WINDOW_HEIGHT, CAPTION
+from Constants.constants import BACKGROUND, BLACK, CAMERA_SPEED, CAPTION, CENTER, FRAME_RATE, GREY, \
+    SIMULATION_BACKGROUND, WINDOW_HEIGHT, WINDOW_WIDTH, TEXT_ONLY
 from Constants.types import COLOR
 # Objects
 from creature import Creature
@@ -87,6 +87,22 @@ class Graphics:
                        'w': self.width / 1.5, 'h': self.height / 1.5}
 
     def run(self) -> None:
+        text = TEXT_ONLY
+        while True:
+            if text:
+                print("Running in textual mode.")
+                for epoch in range(self.simulation.generation_time):
+                    self.simulation.update(text)
+            else:
+                break
+            text = False if input('Render? {}'.format(text)).lower() == 'y' else True
+        self.graphical_run()
+
+    def text_run(self) -> None:
+        while True:
+            self.simulation.update()
+
+    def graphical_run(self) -> None:
         """
         Runs graphics.
         """
@@ -240,4 +256,4 @@ class Graphics:
 
 if __name__ == '__main__':
     g = Graphics(Simulation(), 800, 600, 'Graphics test')
-    g.run()
+    g.graphical_run()
