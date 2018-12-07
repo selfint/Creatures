@@ -638,9 +638,11 @@ class Simulation:
 
 
 if __name__ == '__main__':
+    print("Starting Simulation...")
     s = Simulation()
-    for _ in range(1):
+    for _ in range(1000):
         s.update()
+    print("Done")
 
     def rand_creature() -> Creature:
         return choice(list(s.population))
