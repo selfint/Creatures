@@ -89,14 +89,9 @@ class Graphics:
     def run(self) -> None:
         text = TEXT_ONLY
         while True:
-            if text:
-                print("Running in textual mode.")
-                for epoch in range(self.simulation.generation_time):
-                    self.simulation.update(text)
-            else:
-                break
-            text = False if input('Render? {}'.format(text)).lower() == 'y' else True
-        self.graphical_run()
+            print("Running in textual mode.")
+            for epoch in range(self.simulation.generation_time):
+                self.simulation.update(text)
 
     def text_run(self) -> None:
         while True:

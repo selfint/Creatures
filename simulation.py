@@ -16,7 +16,7 @@ from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, SIMULATI
 from Constants.data_structures import CreatureActions, CreatureLocation, CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
     CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, \
-    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, GENERATION_TIME, INTER_SPECIES_MATE, NEW_CHILDREN, \
+    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, MAX_AGE, INTER_SPECIES_MATE, NEW_CHILDREN, \
     NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
@@ -30,7 +30,7 @@ class Simulation:
 
     def __init__(self, population_size: int = POPULATION_SIZE, width: int = SIMULATION_WIDTH, height: int = SIMULATION_WIDTH,
                  creature_scale: float = CREATURE_SCALE):
-        self.generation_time = GENERATION_TIME
+        self.generation_time = MAX_AGE
         self.generation = 1
         self.colors = self.new_color()
         if population_size < 1:
@@ -52,7 +52,7 @@ class Simulation:
         self.node_count = len(base_dna.nodes) + 1
 
         # Map creatures to creature info named tuples.
-        self.population = dict(self.new_child() for _ in range(self.population_size))
+        self.population = dict(self.initialize_child() for _ in range(self.population_size))
 
         # Categorize different species.
         self.species = {}
@@ -81,6 +81,7 @@ class Simulation:
         if BASE_DNA == 'CONNECTED':
             for src_number in range(CREATURE_INPUTS):
                 for dst_number in range(CREATURE_INPUTS, CREATURE_INPUTS + CREATURE_OUTPUTS):
+
                     # Generate connection mutation between each Input node to every Output node.
                     mutation = ConnectionMutation(len(mutations) + 1, src_number + 1, dst_number + 1)
                     mutations.append(mutation)
@@ -100,34 +101,23 @@ class Simulation:
         """
 
         # Get creature's thoughts about all other creatures.
-        if self.generation_time > 0:
-            for creature, creature_info in self.population.items():
-                creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
-                                      for other, other_info in
-                                      ignore(self.world_info.items(), (creature, creature_info))]
-                creature_actions = self.interpret_decisions(creature_decisions)
-                self.apply_action(creature, creature_actions)
+        for creature, creature_info in self.population.items():
+            creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
+                                  for other, other_info in
+                                  ignore(self.world_info.items(), (creature, creature_info))]
+            creature_actions = self.interpret_decisions(creature_decisions)
+            self.apply_action(creature, creature_actions)
 
-                # Add fitness to creature based on his actions.
-                # Add 1 for each frame creature is alive.
-                self.update_creature_properties(creature, creature_actions)
-            self.generation_time -= 1
-            if self.generation_time % 100 == 0:
-                print('Epoch', self.generation_time)
-        else:
-            if text or TEXT_INFORMATION:
-                print('Generation', self.generation, 'done. Population', len(self.population), '(', len(self.species),
-                      'species)', 'best fitness:', max(self.population, key=lambda c: c.fitness).fitness)
-            self.population = self.new_generation()
-            self.population_size = len(self.population)
-            self.update_species()
-            self.generation_time = GENERATION_TIME
-            self.generation += 1
-            if text or TEXT_INFORMATION:
-                print('New Generation. Population {} Species {}'.format(len(self.population), len(self.species)))
+            # Add fitness to creature based on his actions.
+            # Add 1 for each frame creature is alive.
+            self.update_creature_properties(creature, creature_actions)
+
+        if text:
+            print([c.age for c in self.population])
 
         # Simulate a round world for the creatures.
         self.wrap_creatures()
+
         self.update_world()
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
@@ -309,6 +299,15 @@ class Simulation:
                 self.innovation_history.append(innovation)
         return mutations
 
+    def add_child(self, child: Creature, child_info: CreatureLocation) -> None:
+        """
+        Adds a child to the population
+        """
+        self.population[child] = child_info
+
+        # Assign the child to a species.
+        self.catalogue_creature(child)
+
     def new_birth(self, parents: Tuple[Creature, Creature]) -> Tuple[Creature, CreatureLocation]:
         """
         Generate new creature from two parents, or generate it by mutating one of the parents.
@@ -320,23 +319,14 @@ class Simulation:
         else:
             dna = deepcopy(choice(parents).dna)
 
-        child, child_info = self.new_child(dna, parents)
+        child, child_info = self.initialize_child(dna, parents)
         self.apply_mutations(child, self.generate_mutations(child))
 
         return child, child_info
 
-    def add_child(self, child: Creature, child_info: CreatureLocation) -> None:
+    def initialize_child(self, dna: Dna = None, parents: Tuple[Creature, Creature] = None) -> Tuple[Creature, CreatureLocation]:
         """
-        Adds a child to the population
-        """
-        self.population[child] = child_info
-
-        # Assign the child to a species.
-        self.catalogue_creature(child)
-
-    def new_child(self, dna: Dna = None, parents: Tuple[Creature, Creature] = None) -> Tuple[Creature, CreatureLocation]:
-        """
-        Generate main__a new creature. Add call to crossover here.
+        Initializes creature in the world.
         """
         primary = choice(list(CREATURE_COLORS.values()))
         secondary = choice(ignore(CREATURE_COLORS.values(), primary))
@@ -415,6 +405,9 @@ class Simulation:
     def creature_death(self, creature: Creature) -> None:
         """
         Handles the death of a creature.
+
+        Removes the creature from the population dictionary and generates a new child in its place.
+        Calls add_child, new_birth.
         """
 
         # Choose parents.
@@ -425,9 +418,12 @@ class Simulation:
                 print("New max fitness:", creature.fitness)
                 self.max_fitness = creature.fitness
 
-        # Kill creature and birth new child.
+        # Birth new child.
         self.add_child(*self.new_birth((parent_a, parent_b)))
+
+        # Kill creature
         del self.population[creature]
+        self.species[self.get_species(creature)].remove(creature)
 
     def catalogue_creature(self, creature: Creature) -> None:
         for species_representative in self.species:
@@ -516,8 +512,7 @@ class Simulation:
             self.catalogue_creature(creature)
             uncatalogued_creatures.remove(creature)
 
-    @staticmethod
-    def update_creature_properties(creature: Creature, creature_actions: CreatureActions) -> None:
+    def update_creature_properties(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
         Updates the creature properties according to its actions.
         """
@@ -525,6 +520,12 @@ class Simulation:
         # The more the creature moves, the higher its fitness.
         distance = math.sqrt(math.pow(creature_actions.x, 2) + math.pow(creature_actions.y, 2))
         creature.fitness += distance
+        creature.distance_travelled += distance
+        creature.age += 1
+        if int(creature.distance_travelled) % 30 == 0:
+            creature.age -= 5
+        if creature.age >= MAX_AGE:
+            self.creature_death(creature)
 
     def get_parents(self) -> Tuple[Creature, Creature]:
         """
@@ -638,14 +639,8 @@ class Simulation:
 
 if __name__ == '__main__':
     s = Simulation()
-
+    for _ in range(1):
+        s.update()
 
     def rand_creature() -> Creature:
         return choice(list(s.population))
-
-    for g in range(3):
-        for _ in range(100):
-            s.update()
-
-        s.new_generation()
-        print(s.population)

@@ -23,8 +23,6 @@ class CreatureLocation:
         return str(self)
 
 
-
-
 CreatureNetworkInput = namedtuple('CreatureNetworkInput', 'dx dy')
 CreatureNetworkOutput = namedtuple('CreatureNetworkOutput', 'left right up down urgency')
 # Each variable that has main__a matching name in CreatureInfo shows how to change that variable.

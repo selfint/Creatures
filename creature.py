@@ -10,6 +10,7 @@ from Constants.constants import CREATURE_STRING, CREATURE_BODY
 from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import CREATURE_HEALTH
 from Constants.types import COLOR
+
 # Objects
 from dna import Dna
 from functions import generate_name
@@ -23,6 +24,8 @@ class Creature:
         self.inputs = dna.inputs
         self.outputs = dna.outputs
         self.dna = dna
+        self.age = 0
+        self.distance_travelled = 0
         self.network = Network(self.dna.nodes, self.dna.node_connections)
 
         if colors is None:
