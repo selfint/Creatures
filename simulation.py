@@ -12,16 +12,18 @@ from numpy import average, math
 
 # Constants
 from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, SIMULATION_HEIGHT, SIMULATION_WIDTH, \
-    SPEED_SCALING, TEXT_INFORMATION
-from Constants.data_structures import CreatureActions, CreatureLocation, CreatureNetworkInput, CreatureNetworkOutput
+    SPEED_SCALING
+from Constants.data_structures import CreatureActions, CreatureLocation, CreatureNetworkInput, CreatureNetworkOutput, \
+    FoodLocation
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
     CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, \
-    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, MAX_AGE, INTER_SPECIES_MATE, NEW_CHILDREN, \
-    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
+    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, INTER_SPECIES_MATE, MAX_AGE, NEW_CHILDREN, \
+    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, MAX_FOOD_AMOUNT
 # Objects
 from creature import Creature
 from dna import Dna
-from functions import clamp, flatten, ignore, sum_one, wrap
+from food import Food
+from functions import clamp, flatten, ignore, sum_one, wrap, append_dict
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
@@ -58,6 +60,10 @@ class Simulation:
         self.species = {}
         self.update_species()
 
+        # Generate food.
+        self.foods = {}
+        self.new_food(population_size * 3)
+
         # Generate world.
         self.world_info = {}
         self.update_world()
@@ -93,7 +99,7 @@ class Simulation:
         Updates world_info.
         """
         # Add all object in the world and their info into the world info dictionary.
-        self.world_info = self.population
+        self.world_info = append_dict(self.population, self.foods)
 
     def update(self, text: bool = False) -> None:
         """
@@ -635,6 +641,15 @@ class Simulation:
                 new_generation[child] = child_info
 
         return new_generation
+
+    def new_food(self, total):
+        """
+        Generates total new foods.
+        """
+
+        food = Food(randint(0, self.world_width), randint(0, self.world_height), randint(0, MAX_FOOD_AMOUNT))
+        for _ in range(total):
+            self.foods[food] = FoodLocation(food.x, food.y, food.amount)
 
 
 if __name__ == '__main__':
