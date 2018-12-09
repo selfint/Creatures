@@ -116,11 +116,14 @@ def append_dict(dict_a: dict, *args: Union[List[dict], dict]) -> dict:
     """
     Appends dicts, does not handle conflicts.
     """
+    new_dict = {}
+    for k, v in dict_a:
+        new_dict[k] = v
     for dictionary in args:
         for k, v in dictionary.items():
             dict_a[k] = v
 
-    return dict_a
+    return new_dict
 
 
 if __name__ == '__main__':
