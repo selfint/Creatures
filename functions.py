@@ -112,10 +112,23 @@ def wrap(value: float, min_limit: float, max_limit: float) -> float:
     return value
 
 
+def append_dict(dict_a: dict, *args: Union[List[dict], dict]) -> dict:
+    """
+    Appends dicts, does not handle conflicts.
+    """
+    for dictionary in args:
+        for k, v in dictionary.items():
+            dict_a[k] = v
+
+    return dict_a
+
+
 if __name__ == '__main__':
     # main__a = {'main__a': 1, 'b__main': 2, 'c': [1, 2]}
     # print_dict(main__a)
     # print(clamp(10, 0, 3))
     # print(generate_name())
     # print(wrap(0.9, 1, 4))
-    pass
+    a = {1: 1, 2: 2}
+    b = {3: 3, 4: 4}
+    print(append_dict(a, b, b, {1: 3}))
