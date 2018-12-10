@@ -10,13 +10,13 @@ import pygame
 from pygame import gfxdraw
 
 # Constants
-from Constants.constants import BACKGROUND, BLACK, CAMERA_SPEED, CAPTION, CENTER, FRAME_RATE, GREY, \
-    SIMULATION_BACKGROUND, WINDOW_HEIGHT, WINDOW_WIDTH, TEXT_ONLY, FOOD_COLOR
+from Constants.constants import BACKGROUND, BLACK, CAMERA_HEIGHT, CAMERA_SPEED, CAMERA_WIDTH, CAPTION, CENTER, \
+    FOOD_COLOR, FRAME_RATE, GREY, SIMULATION_BACKGROUND, TEXT_ONLY, WINDOW_HEIGHT, WINDOW_WIDTH
 from Constants.types import COLOR
 # Objects
 from creature import Creature
 from food import Food
-from functions import ignore
+from functions import ignore, euclidian_distance
 from simulation import Simulation
 
 
@@ -85,7 +85,8 @@ def draw_object(screen: object, thing: Union[Creature], x: float, y: float, scal
 
 class Graphics:
 
-    def __init__(self, simulation: Simulation, width: int = WINDOW_WIDTH, height: int = WINDOW_HEIGHT, caption: str = CAPTION):
+    def __init__(self, simulation: Simulation, width: int = WINDOW_WIDTH, height: int = WINDOW_HEIGHT,
+                 caption: str = CAPTION, camera_width: float = CAMERA_WIDTH, camera_height: float = CAMERA_HEIGHT):
         """
         Renders the simulation.
         """
@@ -95,13 +96,16 @@ class Graphics:
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption(caption)
         self.clock = pygame.time.Clock()
+        self.mouse = 0, 0
 
         # Setup camera.
         self.camera_window_x = 0
         self.camera_window_y = 0
         self.camera_dx, self.camera_dy = 0, 0
         self.camera = {'x': self.camera_window_x, 'y': self.camera_window_y,
-                       'w': self.width / 1.5, 'h': self.height / 1.5}
+                       'w': camera_width, 'h': camera_height}
+        self.selected_object = None
+        self.hovered_object = None
 
     def run(self) -> None:
         text = TEXT_ONLY
@@ -122,6 +126,7 @@ class Graphics:
 
         run = True
         while run:
+            select_object = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
@@ -146,6 +151,14 @@ class Graphics:
                         self.camera_dx = 0
                     if event.key == pygame.K_DOWN:
                         self.camera_dy = 0
+
+                elif event.type == pygame.MOUSEMOTION:
+                    self.mouse = event.pos
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    select_object = True
+
+            # Move camera.
             self.camera['x'] += self.camera_dx
             self.camera['y'] += self.camera_dy
 
@@ -157,6 +170,14 @@ class Graphics:
             self.simulation.update()
             for obj in self.simulation.world_info:
                 object_location = self.simulation.world_info[obj]
+
+                distance = euclidian_distance(object_location.x, object_location.y, self.mouse[0], self.mouse[1])
+                if distance < 10:
+                    self.hovered_object = obj
+                    if self.selected_object is not self.hovered_object and select_object:
+                        print(self.hovered_object)
+                        self.selected_object = self.hovered_object
+                        select_object = False
 
                 # Make sure object is in view of the camera.
                 if self.in_view(object_location.x, object_location.y):
