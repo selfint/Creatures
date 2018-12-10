@@ -1,6 +1,7 @@
 # functions.py
 # Description: functions.
 # ---------------------------------------------------------------------------------------------------------------------
+from math import sqrt
 from typing import List, Dict, Iterable, Union
 from random import gauss, random, choice, randint
 
@@ -124,6 +125,14 @@ def append_dict(dict_a: dict, *args: Union[List[dict], dict]) -> dict:
             new_dict[k] = v
 
     return new_dict
+
+
+def euclidian_distance(ax: float, ay: float, bx: float, by: float) -> float:
+    """
+    Calculates euclidian distance between two 2D points.
+    """
+
+    return sqrt(pow(ax - bx, 2) + pow(ay - by, 2))
 
 
 if __name__ == '__main__':
