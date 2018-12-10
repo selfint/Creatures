@@ -19,6 +19,12 @@ class Food:
         # Graphics.
         self.body = FOOD_BODY
 
+    def __str__(self):
+        return "{}(x={}, y={}, amount={})".format(self.__class__.__name__, self.x, self.y, self.amount)
+
+    def __repr__(self):
+        return str(self)
+
 
 if __name__ == '__main__':
     f = Food(100, 100, 1)
