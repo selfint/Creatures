@@ -12,7 +12,7 @@ from numpy import average, math
 
 # Constants
 from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, SIMULATION_HEIGHT, SIMULATION_WIDTH, \
-    SPEED_SCALING
+    SPEED_SCALING, FOOD_SCALE
 from Constants.data_structures import CreatureActions, CreatureNetworkInput, CreatureNetworkOutput, \
     Location
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
@@ -181,7 +181,8 @@ class Simulation:
         else:
             raise NotImplementedError("Creatures can only 'see' other creatures and foods")
 
-    def constrain_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH, y_max: int = SIMULATION_HEIGHT) -> None:
+    def constrain_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH,
+                            y_max: int = SIMULATION_HEIGHT) -> None:
         """
         Makes sure all creatures stay within given borders (default is screen size).
         """
@@ -189,7 +190,8 @@ class Simulation:
             creature_info.x = clamp(creature_info.x, x_min, x_max)
             creature_info.y = clamp(creature_info.y, y_min, y_max)
 
-    def wrap_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH, y_max: int = SIMULATION_HEIGHT) -> None:
+    def wrap_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH,
+                       y_max: int = SIMULATION_HEIGHT) -> None:
         """
         Simulates a round world.
         """
@@ -651,7 +653,7 @@ class Simulation:
 
         food = Food(randint(0, self.world_width), randint(0, self.world_height), randint(0, MAX_FOOD_AMOUNT))
         for _ in range(total):
-            self.foods[food] = Location(food.x, food.y, food.amount)
+            self.foods[food] = Location(food.x, food.y, food.amount * FOOD_SCALE)
 
 
 if __name__ == '__main__':

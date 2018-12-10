@@ -11,10 +11,11 @@ from pygame import gfxdraw
 
 # Constants
 from Constants.constants import BACKGROUND, BLACK, CAMERA_SPEED, CAPTION, CENTER, FRAME_RATE, GREY, \
-    SIMULATION_BACKGROUND, WINDOW_HEIGHT, WINDOW_WIDTH, TEXT_ONLY
+    SIMULATION_BACKGROUND, WINDOW_HEIGHT, WINDOW_WIDTH, TEXT_ONLY, FOOD_COLOR
 from Constants.types import COLOR
 # Objects
 from creature import Creature
+from food import Food
 from functions import ignore
 from simulation import Simulation
 
@@ -56,6 +57,20 @@ def draw_creature(screen: object, creature: Creature, x: float, y: float, scale:
                     shape_color)
 
 
+def draw_food(screen: object, food: Food, x: float, y: float, scale: float) -> None:
+    """
+    Parses food body data and draws it onto the screen.
+    """
+
+    # Get food body data.
+    for i in range(len(food.body)):
+        shapes = food.body[i]
+        for shape_x, shape_y, shape_width, shape_height in shapes:
+            shape_color = FOOD_COLOR
+            ellipse(screen, x + shape_x * scale, y + shape_y * scale, scale * shape_width, scale * shape_height,
+                    shape_color)
+
+
 def draw_object(screen: object, thing: Union[Creature], x: float, y: float, scale: float) -> None:
     """
     Calls the appropriate function based on the object type. Assumes the object has Info tuple
@@ -64,6 +79,8 @@ def draw_object(screen: object, thing: Union[Creature], x: float, y: float, scal
     # Draw Creatures.
     if isinstance(thing, Creature):
         draw_creature(screen, thing, x, y, scale)
+    elif isinstance(thing, Food):
+        draw_food(screen, thing, x, y, scale)
 
 
 class Graphics:
@@ -139,14 +156,14 @@ class Graphics:
             # Run simulation.
             self.simulation.update()
             for obj in self.simulation.world_info:
-                object_info = self.simulation.world_info[obj]
+                object_location = self.simulation.world_info[obj]
 
                 # Make sure object is in view of the camera.
-                if self.in_view(object_info.x, object_info.y):
+                if self.in_view(object_location.x, object_location.y):
                     draw_object(self.screen, obj,
-                                object_info.x - self.camera['x'],
-                                object_info.y - self.camera['y'],
-                                object_info.scale)
+                                object_location.x - self.camera['x'],
+                                object_location.y - self.camera['y'],
+                                object_location.scale)
 
             self.draw_borders()
 

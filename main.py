@@ -12,7 +12,7 @@ from simulation import Simulation
 if __name__ == '__main__':
     simulation = Simulation()
     graphics = Graphics(simulation)
-    graphics.run()
+    graphics.graphical_run()
     sys.exit(1)
 
 
