@@ -10,6 +10,7 @@ from simulation import Simulation
 
 # Run simulation.
 if __name__ == '__main__':
+    print("Starting simulation.")
     simulation = Simulation()
     graphics = Graphics(simulation)
 
