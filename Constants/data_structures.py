@@ -7,9 +7,9 @@ from collections import namedtuple
 
 
 # Data structures.
-# - Creature -
-# Creature information is mutable, so cant use named tuple
-class CreatureLocation:
+# - Location -
+# Basic location requirements that every location object must have.
+class Location:
 
     def __init__(self, x: float, y: float, scale: float):
         self.x = x
@@ -23,6 +23,7 @@ class CreatureLocation:
         return str(self)
 
 
+# - Creature -
 CreatureNetworkInput = namedtuple('CreatureNetworkInput', 'dx dy')
 CreatureNetworkOutput = namedtuple('CreatureNetworkOutput', 'left right up down urgency')
 # Each variable that has main__a matching name in CreatureInfo shows how to change that variable. For example:
@@ -32,4 +33,3 @@ CreatureActions = namedtuple('CreatureActions', 'x y')
 
 
 # - Food -
-FoodLocation = namedtuple('FoodLocation', 'x y scale')

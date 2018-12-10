@@ -13,17 +13,17 @@ from numpy import average, math
 # Constants
 from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, SIMULATION_HEIGHT, SIMULATION_WIDTH, \
     SPEED_SCALING
-from Constants.data_structures import CreatureActions, CreatureLocation, CreatureNetworkInput, CreatureNetworkOutput, \
-    FoodLocation
+from Constants.data_structures import CreatureActions, CreatureNetworkInput, CreatureNetworkOutput, \
+    Location
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
     CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, \
-    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, INTER_SPECIES_MATE, MAX_AGE, NEW_CHILDREN, \
-    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, MAX_FOOD_AMOUNT
+    DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, INTER_SPECIES_MATE, MAX_AGE, MAX_FOOD_AMOUNT, NEW_CHILDREN, \
+    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
 # Objects
 from creature import Creature
 from dna import Dna
 from food import Food
-from functions import clamp, flatten, ignore, sum_one, wrap, append_dict
+from functions import append_dict, clamp, flatten, ignore, sum_one, wrap
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
@@ -162,8 +162,7 @@ class Simulation:
         actions = CreatureActions(move_x, move_y)
         return actions
 
-    def info_to_vec(self, creature_info: CreatureLocation, other_info: Union[CreatureLocation, FoodLocation])\
-            -> CreatureNetworkInput:
+    def info_to_vec(self, creature_info: Location, other_info: Location) -> CreatureNetworkInput:
         """
         Meaningfully convert CreatureInfo of a target creature to a CreatureNetworkInput named tuple,
         based on the creature info of the source creature.
@@ -171,7 +170,7 @@ class Simulation:
         :param other_info: Destination creature (creature SEEN).
         :return: Network input for creature LOOKING at creature SEEN.
         """
-        if isinstance(other_info, CreatureLocation) or isinstance(other_info, FoodLocation):
+        if isinstance(other_info, Location) or isinstance(other_info, Location):
             # Calculate dx and dy.
             dx = (creature_info.x - other_info.x) / self.world_width
             dy = (creature_info.y - other_info.y) / self.world_height
@@ -308,7 +307,7 @@ class Simulation:
                 self.innovation_history.append(innovation)
         return mutations
 
-    def add_child(self, child: Creature, child_info: CreatureLocation) -> None:
+    def add_child(self, child: Creature, child_info: Location) -> None:
         """
         Adds a child to the population
         """
@@ -317,7 +316,7 @@ class Simulation:
         # Assign the child to a species.
         self.catalogue_creature(child)
 
-    def new_birth(self, parents: Tuple[Creature, Creature]) -> Tuple[Creature, CreatureLocation]:
+    def new_birth(self, parents: Tuple[Creature, Creature]) -> Tuple[Creature, Location]:
         """
         Generate new creature from two parents, or generate it by mutating one of the parents.
         """
@@ -333,7 +332,7 @@ class Simulation:
 
         return child, child_info
 
-    def initialize_child(self, dna: Dna = None, parents: Tuple[Creature, Creature] = None) -> Tuple[Creature, CreatureLocation]:
+    def initialize_child(self, dna: Dna = None, parents: Tuple[Creature, Creature] = None) -> Tuple[Creature, Location]:
         """
         Initializes creature in the world.
         """
@@ -346,9 +345,9 @@ class Simulation:
         if parents:
             a, b = parents
             a_info, b_info = self.population[a], self.population[b]
-            child_info = CreatureLocation((a_info.x + b_info.x) / 2, (a_info.y + b_info.y) / 2, self.creature_scale)
+            child_info = Location((a_info.x + b_info.x) / 2, (a_info.y + b_info.y) / 2, self.creature_scale)
         else:
-            child_info = CreatureLocation(randint(0, self.world_width), randint(0, self.world_height), self.creature_scale)
+            child_info = Location(randint(0, self.world_width), randint(0, self.world_height), self.creature_scale)
 
         return child, child_info
 
@@ -445,7 +444,7 @@ class Simulation:
             self.species[creature] = [creature]
 
     @staticmethod
-    def compare_genomes(creature_a, creature_b):
+    def compare_genomes(creature_a: Creature, creature_b: Creature):
         """"
         Generate matching, disjoint and excess gene lists for two creature's dna.
         """
@@ -587,7 +586,7 @@ class Simulation:
 
             yield new_p, new_s
 
-    def new_generation(self) -> Dict[Creature, CreatureLocation]:
+    def new_generation(self) -> Dict[Creature, Location]:
         """
         Generates a new generation based on the fitness levels of each creature and each species.
         """
@@ -645,14 +644,14 @@ class Simulation:
 
         return new_generation
 
-    def new_food(self, total):
+    def new_food(self, total: int) -> None:
         """
         Generates total new foods.
         """
 
         food = Food(randint(0, self.world_width), randint(0, self.world_height), randint(0, MAX_FOOD_AMOUNT))
         for _ in range(total):
-            self.foods[food] = FoodLocation(food.x, food.y, food.amount)
+            self.foods[food] = Location(food.x, food.y, food.amount)
 
 
 if __name__ == '__main__':
