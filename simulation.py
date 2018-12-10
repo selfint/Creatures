@@ -5,14 +5,14 @@
 # Imports
 from copy import deepcopy
 from random import choice, randint, random
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 
 import numpy as np
 from numpy import average, math
 
 # Constants
-from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, SIMULATION_HEIGHT, SIMULATION_WIDTH, \
-    SPEED_SCALING, FOOD_SCALE
+from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, FOOD_SCALE, FOOD_SIZE, SIMULATION_HEIGHT, \
+    SIMULATION_WIDTH, SPEED_SCALING
 from Constants.data_structures import CreatureActions, CreatureNetworkInput, CreatureNetworkOutput, \
     Location
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
@@ -23,7 +23,7 @@ from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, 
 from creature import Creature
 from dna import Dna
 from food import Food
-from functions import append_dict, clamp, flatten, ignore, sum_one, wrap
+from functions import append_dict, clamp, euclidian_distance, flatten, ignore, sum_one, wrap
 from mutations import BiasMutation, ConnectionMutation, Innovation, MutationObject, NodeMutation, WeightMutation
 from node import InputNode, OutputNode
 
@@ -107,10 +107,12 @@ class Simulation:
         """
 
         # Get creature's thoughts about all other creatures.
-        for creature, creature_info in self.population.items():
-            creature_decisions = [creature.think(self.info_to_vec(creature_info, other_info))
+        for creature, creature_location in self.population.items():
+            creature_decisions = [creature.think(self.info_to_vec(creature_location, other_info))
                                   for other, other_info in
-                                  ignore(self.world_info.items(), (creature, creature_info))]
+                                  ignore(self.world_info.items(), (creature, creature_location))
+                                  if euclidian_distance(creature_location.x, creature_location.y, other_info.x, other_info.y)
+                                  < creature.line_of_sight]
             creature_actions = self.interpret_decisions(creature_decisions)
             self.apply_action(creature, creature_actions)
 
@@ -118,8 +120,13 @@ class Simulation:
             # Add 1 for each frame creature is alive.
             self.update_creature_properties(creature, creature_actions)
 
-        if text:
-            print([c.age for c in self.population])
+            # Check if creature ate a food.
+            for food, food_location in self.foods.items():
+                distance = euclidian_distance(food_location.x, food_location.y, creature_location.x,
+                                              creature_location.y)
+                distance -= food.amount * FOOD_SIZE * food_location.scale
+                if distance < creature.reach * creature_location.scale:
+                    self.creature_eat(creature, food)
 
         # Simulate a round world for the creatures.
         self.wrap_creatures()
@@ -646,15 +653,30 @@ class Simulation:
 
         return new_generation
 
-    def new_food(self, total: int) -> None:
+    def new_food(self, total: int, remove: Food = None) -> None:
         """
         Generates total new foods.
         """
 
-        food = Food(randint(0, self.world_width), randint(0, self.world_height), randint(0, MAX_FOOD_AMOUNT))
         for _ in range(total):
+            food = Food(randint(0, self.world_width), randint(0, self.world_height), randint(0, MAX_FOOD_AMOUNT))
             self.foods[food] = Location(food.x, food.y, food.amount * FOOD_SCALE)
 
+        if remove:
+            del self.foods[remove]
+
+    def creature_eat(self, creature: Creature, food: Food) -> None:
+        """
+        Handles a creature eating a piece of food.
+        """
+
+        if DEBUG:
+            print(creature, "is eating", food)
+        creature.health += 10
+        creature.fitness += 100
+        food.amount -= 1
+        if food.amount <= 0:
+            self.new_food(1, remove=food)
 
 if __name__ == '__main__':
     s = Simulation()

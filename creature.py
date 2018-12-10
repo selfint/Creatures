@@ -6,7 +6,7 @@
 from typing import List, Union
 
 # Constants
-from Constants.constants import CREATURE_STRING, CREATURE_BODY
+from Constants.constants import CREATURE_STRING, CREATURE_BODY, CREATURE_REACH, CREATURE_LINE_OF_SIGHT
 from Constants.data_structures import CreatureNetworkInput, CreatureNetworkOutput
 from Constants.neat_parameters import CREATURE_HEALTH
 from Constants.types import COLOR
@@ -37,6 +37,8 @@ class Creature:
         self.name = generate_name()
         self.fitness = 0
         self.health = CREATURE_HEALTH
+        self.reach = CREATURE_REACH
+        self.line_of_sight = CREATURE_LINE_OF_SIGHT
 
     def __str__(self):
         return CREATURE_STRING.format(self.name, self.dna.hidden)
