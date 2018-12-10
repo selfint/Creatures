@@ -3,6 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Imports
+import time
 from copy import deepcopy
 from random import choice, randint, random
 from typing import Dict, List, Tuple
@@ -34,11 +35,13 @@ class Simulation:
                  creature_scale: float = CREATURE_SCALE):
         self.generation_time = MAX_AGE
         self.generation = 1
+        self.simulation_time = 0
+        self.previous_time = time.time()
         self.colors = self.new_color()
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
 
-        self.max_fitness = 0
+        self.current_best = 0
         self.population_size = population_size
         self.world_width = width
         self.world_height = height
@@ -62,7 +65,7 @@ class Simulation:
 
         # Generate food.
         self.foods = {}
-        self.new_food(population_size * 3)
+        self.new_food(population_size)
 
         # Generate world.
         self.world_info = {}
@@ -105,14 +108,21 @@ class Simulation:
         """
         Runs a single frame of the simulation.
         """
+        current_time = float(time.time())
+        self.simulation_time += current_time - self.previous_time
+        self.previous_time = current_time
+        if int(self.simulation_time) % 30 == 0 and text:
+            print("Generation", self.generation, "| simulation time:", self.simulation_time,
+                  "| population", len(self.population), "| species", len(self.species),
+                  "| current best", self.current_best)
 
         # Get creature's thoughts about all other creatures.
         for creature, creature_location in self.population.items():
-            creature_decisions = [creature.think(self.info_to_vec(creature_location, other_info))
+            creature_decisions = [creature.think(self.info_to_vec(creature_location, other, other_info))
                                   for other, other_info in
                                   ignore(self.world_info.items(), (creature, creature_location))
-                                  if euclidian_distance(creature_location.x, creature_location.y, other_info.x, other_info.y)
-                                  < creature.line_of_sight]
+                                  if euclidian_distance(creature_location.x, creature_location.y,
+                                                        other_info.x, other_info.y) < creature.line_of_sight]
             creature_actions = self.interpret_decisions(creature_decisions)
             self.apply_action(creature, creature_actions)
 
@@ -130,8 +140,10 @@ class Simulation:
 
         # Simulate a round world for the creatures.
         self.wrap_creatures()
-
         self.update_world()
+
+        # Find the best creature.
+        self.current_best = max(self.population, key=lambda c: c.fitness).fitness
 
     def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
         """
@@ -169,7 +181,7 @@ class Simulation:
         actions = CreatureActions(move_x, move_y)
         return actions
 
-    def info_to_vec(self, creature_info: Location, other_info: Location) -> CreatureNetworkInput:
+    def info_to_vec(self, creature_info: Location, other, other_info: Location) -> CreatureNetworkInput:
         """
         Meaningfully convert CreatureInfo of a target creature to a CreatureNetworkInput named tuple,
         based on the creature info of the source creature.
@@ -177,13 +189,14 @@ class Simulation:
         :param other_info: Destination creature (creature SEEN).
         :return: Network input for creature LOOKING at creature SEEN.
         """
-        if isinstance(other_info, Location) or isinstance(other_info, Location):
+        if isinstance(other_info, Location):
             # Calculate dx and dy.
             dx = (creature_info.x - other_info.x) / self.world_width
             dy = (creature_info.y - other_info.y) / self.world_height
+            type = int(isinstance(other, Food))
 
             # Build network input.
-            network_input = CreatureNetworkInput(dx, dy)
+            network_input = CreatureNetworkInput(dx, dy, type)
             return network_input
         else:
             raise NotImplementedError("Creatures can only 'see' other creatures and foods")
@@ -430,11 +443,6 @@ class Simulation:
         # Choose parents.
         parent_a, parent_b = self.get_parents()
 
-        if DEBUG:
-            if creature.fitness > self.max_fitness:
-                print("New max fitness:", creature.fitness)
-                self.max_fitness = creature.fitness
-
         # Birth new child.
         self.add_child(*self.new_birth((parent_a, parent_b)))
 
@@ -672,11 +680,12 @@ class Simulation:
 
         if DEBUG:
             print(creature, "is eating", food)
-        creature.health += 10
-        creature.fitness += 100
+        creature.health = min(creature.health + 10, 100)
+        creature.fitness += 10
         food.amount -= 1
         if food.amount <= 0:
             self.new_food(1, remove=food)
+
 
 if __name__ == '__main__':
     print("Starting Simulation...")
