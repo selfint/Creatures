@@ -5,7 +5,7 @@
 # Imports
 from copy import deepcopy
 from random import choice, randint, random
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from numpy import average, math
@@ -162,7 +162,8 @@ class Simulation:
         actions = CreatureActions(move_x, move_y)
         return actions
 
-    def info_to_vec(self, creature_info: CreatureLocation, other_info: CreatureLocation) -> CreatureNetworkInput:
+    def info_to_vec(self, creature_info: CreatureLocation, other_info: Union[CreatureLocation, FoodLocation])\
+            -> CreatureNetworkInput:
         """
         Meaningfully convert CreatureInfo of a target creature to a CreatureNetworkInput named tuple,
         based on the creature info of the source creature.
@@ -170,14 +171,16 @@ class Simulation:
         :param other_info: Destination creature (creature SEEN).
         :return: Network input for creature LOOKING at creature SEEN.
         """
+        if isinstance(other_info, CreatureLocation) or isinstance(other_info, FoodLocation):
+            # Calculate dx and dy.
+            dx = (creature_info.x - other_info.x) / self.world_width
+            dy = (creature_info.y - other_info.y) / self.world_height
 
-        # Calculate dx and dy.
-        dx = (creature_info.x - other_info.x) / self.world_width
-        dy = (creature_info.y - other_info.y) / self.world_height
-
-        # Build network input.
-        network_input = CreatureNetworkInput(dx, dy)
-        return network_input
+            # Build network input.
+            network_input = CreatureNetworkInput(dx, dy)
+            return network_input
+        else:
+            raise NotImplementedError("Creatures can only 'see' other creatures and foods")
 
     def constrain_creatures(self, x_min: int = 0, y_min: int = 0, x_max: int = SIMULATION_WIDTH, y_max: int = SIMULATION_HEIGHT) -> None:
         """

@@ -121,7 +121,7 @@ def append_dict(dict_a: dict, *args: Union[List[dict], dict]) -> dict:
         new_dict[k] = v
     for dictionary in args:
         for k, v in dictionary.items():
-            dict_a[k] = v
+            new_dict[k] = v
 
     return new_dict
 
