@@ -13,7 +13,7 @@ from numpy import average, math
 
 # Constants
 from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, FOOD_SCALE, FOOD_SIZE, SIMULATION_HEIGHT, \
-    SIMULATION_WIDTH, SPEED_SCALING
+    SIMULATION_WIDTH, SPEED_SCALING, FOOD_TIME_START
 from Constants.data_structures import CreatureActions, CreatureNetworkInput, CreatureNetworkOutput, \
     Location
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
@@ -131,12 +131,14 @@ class Simulation:
             self.update_creature_properties(creature, creature_actions)
 
             # Check if creature ate a food.
-            for food, food_location in self.foods.items():
-                distance = euclidian_distance(food_location.x, food_location.y, creature_location.x,
-                                              creature_location.y)
-                distance -= food.amount * FOOD_SIZE * food_location.scale
-                if distance < creature.reach * creature_location.scale:
-                    self.creature_eat(creature, food)
+            # Food can only be eaten after 30 seconds of simulation, to avoid spawn eating.
+            if self.simulation_time > FOOD_TIME_START:
+                for food, food_location in self.foods.items():
+                    distance = euclidian_distance(food_location.x, food_location.y, creature_location.x,
+                                                  creature_location.y)
+                    distance -= food.amount * FOOD_SIZE * food_location.scale
+                    if distance < creature.reach * creature_location.scale:
+                        self.creature_eat(creature, food)
 
         # Simulate a round world for the creatures.
         self.wrap_creatures()
