@@ -108,14 +108,9 @@ class Graphics:
         self.hovered_object = None
 
     def text_run(self) -> None:
-        text = TEXT_ONLY
         print("Running in textual mode.")
         while True:
-            self.simulation.update(text)
-            if self.simulation.current_best > 1000:
-                print("1000 fitness reached, rendering")
-                break
-        self.graphical_run()
+            self.simulation.update(True)
 
     def graphical_run(self) -> None:
         """
