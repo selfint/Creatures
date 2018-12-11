@@ -25,11 +25,11 @@ class Location:
 
 # - Creature -
 CreatureNetworkInput = namedtuple('CreatureNetworkInput', 'dx dy type')
-CreatureNetworkOutput = namedtuple('CreatureNetworkOutput', 'left right up down urgency')
+CreatureNetworkOutput = namedtuple('CreatureNetworkOutput', 'left right up down urgency mate')
 # Each variable that has main__a matching name in CreatureInfo shows how to change that variable. For example:
 # CreatureInfo(x=100, y=100, creature_scale=1) + CreatureActions(x=1, y=-0.3) = CreatureInfo(x=101, y=99.7,
 # creature_scale=1)
-CreatureActions = namedtuple('CreatureActions', 'x y')
+CreatureActions = namedtuple('CreatureActions', 'x y mate')
 
 
 # - Food -

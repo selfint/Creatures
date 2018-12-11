@@ -6,7 +6,7 @@
 import time
 from copy import deepcopy
 from random import choice, randint, random
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterator
 
 import numpy as np
 from numpy import average, math
@@ -19,7 +19,7 @@ from Constants.data_structures import CreatureActions, CreatureNetworkInput, Cre
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
     CONNECTION_MUTATION_RATE, CREATURE_INPUTS, CREATURE_OUTPUTS, CROSSOVER_RATE, DELTA_WEIGHT_CONSTANT, \
     DISJOINT_CONSTANT, DISTANCE_THRESHOLD, EXCESS_CONSTANT, INTER_SPECIES_MATE, MAX_AGE, MAX_FOOD_AMOUNT, NEW_CHILDREN, \
-    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE
+    NODE_MUTATION_RATE, POPULATION_SIZE, WEIGHT_MUTATION_RATE, MATING_URGE_THRESHOLD
 # Objects
 from creature import Creature
 from dna import Dna
@@ -118,13 +118,14 @@ class Simulation:
 
         # Get creature's thoughts about all other creatures.
         for creature, creature_location in self.population.items():
+            objects_in_view = [(other, other_info) for other, other_info in
+                               ignore(self.world_info.items(), (creature, creature_location))
+                               if euclidian_distance(creature_location.x, creature_location.y,
+                                                     other_info.x, other_info.y) < creature.line_of_sight]
             creature_decisions = [creature.think(self.info_to_vec(creature_location, other, other_info))
-                                  for other, other_info in
-                                  ignore(self.world_info.items(), (creature, creature_location))
-                                  if euclidian_distance(creature_location.x, creature_location.y,
-                                                        other_info.x, other_info.y) < creature.line_of_sight]
-            creature_actions = self.interpret_decisions(creature_decisions)
-            self.apply_action(creature, creature_actions)
+                                  for other, other_info in objects_in_view]
+            creature_actions = self.interpret_decisions(list(zip(objects_in_view, creature_decisions)))
+            self.apply_action(creature, creature_location, creature_actions)
 
             # Add fitness to creature based on his actions.
             # Add 1 for each frame creature is alive.
@@ -147,27 +148,36 @@ class Simulation:
         # Find the best creature.
         self.current_best = max(self.population, key=lambda c: c.fitness).fitness
 
-    def apply_action(self, creature: Creature, creature_actions: CreatureActions) -> None:
+    def apply_action(self, creature: Creature, creature_location: Location, creature_actions: CreatureActions) -> None:
         """
         Applies the action the creature decided to do.
         """
-        info = self.population[creature]
-        for attr in self.creature_actions:
-            creature_attr, action_attr = getattr(info, attr), getattr(creature_actions, attr)
-            setattr(info, attr, creature_attr + action_attr)
+        for attr in self.creature_actions[:4]:
+            creature_attr, action_attr = getattr(creature_location, attr), getattr(creature_actions, attr)
+            setattr(creature_location, attr, creature_attr + action_attr)
 
     @staticmethod
-    def interpret_decisions(decisions: List[CreatureNetworkOutput]) -> CreatureActions:
+    def interpret_decisions(decisions: List[Tuple[Tuple[Creature, Location], CreatureNetworkOutput]]) \
+            -> CreatureActions:
         """
         Converts creature network output to creature actions.
-        :param decisions: All decisions creature made towards all other creatures.
+        :param decisions: All decisions creature made towards all other objects in its line of sight.
         """
 
         # Avg out everything the creature wants to do, using main__a weighted average against the urgency of each
         # decision.
-        move_x, move_y = 0, 0
-        for decision in decisions:
-            left, right, up, down, urgency = decision
+        move_x, move_y, total = 0, 0, 0
+        best_mate, biggest_urge = None, -1
+        for (creature, creature_info), decision in decisions:
+            left, right, up, down, urgency, mate = decision
+            print(decision)
+            total += 1
+            if mate > MATING_URGE_THRESHOLD:
+                if urgency > biggest_urge:
+                    best_mate = creature
+                    biggest_urge = urgency
+
+            # Movement.
             if right > left:
                 move_x += right * urgency
             elif right < left:
@@ -176,11 +186,13 @@ class Simulation:
                 move_y += up * urgency
             elif up < down:
                 move_y += -down * urgency
-        if decisions:
-            move_x = move_x * SPEED_SCALING / len(decisions)
-            move_y = move_y * SPEED_SCALING / len(decisions)
 
-        actions = CreatureActions(move_x, move_y)
+        # Sometimes the creature can't 'see' anything, so total would be 0.
+        if total:
+            move_x = move_x * SPEED_SCALING / total
+            move_y = move_y * SPEED_SCALING / total
+
+        actions = CreatureActions(move_x, move_y, best_mate)
         return actions
 
     def info_to_vec(self, creature_info: Location, other, other_info: Location) -> CreatureNetworkInput:
@@ -443,16 +455,19 @@ class Simulation:
         """
 
         # Choose parents.
-        parent_a, parent_b = self.get_parents()
+        # parent_a, parent_b = self.get_parents()
 
         # Birth new child.
-        self.add_child(*self.new_birth((parent_a, parent_b)))
+        # self.add_child(*self.new_birth((parent_a, parent_b)))
 
         # Kill creature
         del self.population[creature]
         self.species[self.get_species(creature)].remove(creature)
 
     def catalogue_creature(self, creature: Creature) -> None:
+        """
+        Checks if the creature fits any of the existing species, if not, generates a new species.
+        """
         for species_representative in self.species:
             if self.genetic_distance(creature, species_representative) < DISTANCE_THRESHOLD:
                 creature.colors = species_representative.colors
@@ -582,7 +597,8 @@ class Simulation:
         parent_b = choice(ignore(self.species[b_species], parent_a))
         return parent_a, parent_b
 
-    def new_color(self):
+    @staticmethod
+    def new_color():
         """
         Generates a new, unused color for a species.
         """

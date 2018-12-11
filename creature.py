@@ -60,17 +60,7 @@ class Creature:
 
 
 if __name__ == '__main__':
-    from node import *
-    from connection import Connection
-
-    main_nodes = {0: InputNode(0),
-                  1: HiddenNode(1, 2),
-                  2: OutputNode(2, 2)}
-    main_connections = {0: Connection(number=0, src_number=0, dst_number=1),
-                        1: Connection(number=1, src_number=1, dst_number=2),
-                        2: Connection(number=2, src_number=2, dst_number=1)}
-    main_dna = Dna(inputs=2, outputs=1, nodes=main_nodes, connections=main_connections)
+    main_dna = Dna(inputs=2, outputs=6)
     c = Creature(dna=main_dna)
-    print(c.think([1]))
-    print(c.think([0]))
-    print(c.dna)
+    print(c.think(CreatureNetworkInput(0, 0, 0)))
+    print(c.think(CreatureNetworkInput(100, 100, 100)))
