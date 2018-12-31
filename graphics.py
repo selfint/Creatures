@@ -107,10 +107,19 @@ class Graphics:
         self.selected_object = None
         self.hovered_object = None
 
+    def run(self) -> None:
+        """
+        Runs simulation either graphically or textually, depending on TEXT_ONLY constant.
+        """
+        if TEXT_ONLY:
+            self.text_run()
+        else:
+            self.graphical_run()
+
     def text_run(self) -> None:
         print("Running in textual mode.")
         while True:
-            self.simulation.update(True)
+            self.simulation.update()
 
     def graphical_run(self) -> None:
         """

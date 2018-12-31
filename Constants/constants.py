@@ -40,6 +40,8 @@ CENTER = 0  # Defines drawing ellipse from their center.
 # Simulation.
 SIMULATION_WIDTH, SIMULATION_HEIGHT = 3000, 3000
 FOOD_TIME_START = 30  # Seconds.
+SIMULATION_REPORT = "Generation {} | simulation time: {} | population {} | species {} | current best {}"
+PRINT_FREQUENCY = 10  # Frames.
 
 # Colors.
 BLACK = 0, 0, 0
