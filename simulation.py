@@ -13,7 +13,7 @@ from numpy import average, math
 
 # Constants
 from Constants.constants import CREATURE_COLORS, CREATURE_SCALE, DEBUG, FOOD_SCALE, FOOD_SIZE, SIMULATION_HEIGHT, \
-    SIMULATION_WIDTH, SPEED_SCALING, FOOD_TIME_START
+    SIMULATION_WIDTH, SPEED_SCALING, FOOD_TIME_START, TEXT_ONLY, SIMULATION_REPORT, PRINT_FREQUENCY
 from Constants.data_structures import CreatureActions, CreatureNetworkInput, CreatureNetworkOutput, \
     Location
 from Constants.neat_parameters import BASE_DNA, BIAS_MUTATION_RATE, BIAS_RANGE, BIG_SPECIES, BOTTOM_PERCENT, \
@@ -35,8 +35,7 @@ class Simulation:
                  creature_scale: float = CREATURE_SCALE):
         self.generation_time = MAX_AGE
         self.generation = 1
-        self.simulation_time = 0
-        self.previous_time = time.time()
+        self.simulation_time = 1
         self.colors = self.new_color()
         if population_size < 1:
             raise ValueError('Population size must be at least 1')
@@ -63,6 +62,9 @@ class Simulation:
         self.species = {}
         self.update_species()
 
+        # Creatures scheduled to die.
+        self.dead_creatures = []
+
         # Generate food.
         self.foods = {}
         self.new_food(population_size)
@@ -71,31 +73,8 @@ class Simulation:
         self.world_info = {}
         self.update_world()
 
-    @staticmethod
-    def base_dna() -> Tuple[Dna, List[ConnectionMutation]]:
-        """
-        Generate base Dna to start creatures from, connect nodes with connection mutations.
-        """
-
-        # Generate base Dna to start creatures from.
-        base_nodes = {}
-        for num in range(1, CREATURE_INPUTS + CREATURE_OUTPUTS + 1):
-            base_nodes[num] = InputNode(num) if num < CREATURE_INPUTS + 1 else OutputNode(num, BIAS_RANGE)
-
-        # Connect nodes with connection mutations.
-        base_dna = Dna(CREATURE_INPUTS, CREATURE_OUTPUTS, nodes=base_nodes)
-        mutations = []
-
-        # Connect nodes by NEAT PARAMETER settings.
-        if BASE_DNA == 'CONNECTED':
-            for src_number in range(CREATURE_INPUTS):
-                for dst_number in range(CREATURE_INPUTS, CREATURE_INPUTS + CREATURE_OUTPUTS):
-
-                    # Generate connection mutation between each Input node to every Output node.
-                    mutation = ConnectionMutation(len(mutations) + 1, src_number + 1, dst_number + 1)
-                    mutations.append(mutation)
-            base_dna.update(mutations)
-        return base_dna, mutations
+        if TEXT_ONLY:
+            self.report = SIMULATION_REPORT
 
     def update_world(self) -> None:
         """
@@ -104,17 +83,15 @@ class Simulation:
         # Add all object in the world and their info into the world info dictionary.
         self.world_info = append_dict(self.population, self.foods)
 
-    def update(self, text: bool = False) -> None:
+    def update(self) -> None:
         """
         Runs a single frame of the simulation.
         """
-        current_time = float(time.time())
-        self.simulation_time += current_time - self.previous_time
-        self.previous_time = current_time
-        if int(self.simulation_time) % 30 == 0 and text:
-            print("Generation", self.generation, "| simulation time:", self.simulation_time,
-                  "| population", len(self.population), "| species", len(self.species),
-                  "| current best", self.current_best)
+        self.simulation_time += 1
+
+        if self.simulation_time % PRINT_FREQUENCY == 0 and TEXT_ONLY:
+            print(self.report.format(self.generation, self.simulation_time, len(self.population), len(self.species),
+                                     self.current_best))
 
         # Get creature's thoughts about all other creatures.
         for creature, creature_location in self.population.items():
@@ -141,6 +118,9 @@ class Simulation:
                     if distance < creature.reach * creature_location.scale:
                         self.creature_eat(creature, food)
 
+        # Kill creatures that died.
+        self.kill_creatures()
+
         # Simulate a round world for the creatures.
         self.wrap_creatures()
         self.update_world()
@@ -152,48 +132,9 @@ class Simulation:
         """
         Applies the action the creature decided to do.
         """
-        for attr in self.creature_actions[:4]:
+        for attr in self.creature_actions:
             creature_attr, action_attr = getattr(creature_location, attr), getattr(creature_actions, attr)
             setattr(creature_location, attr, creature_attr + action_attr)
-
-    @staticmethod
-    def interpret_decisions(decisions: List[Tuple[Tuple[Creature, Location], CreatureNetworkOutput]]) \
-            -> CreatureActions:
-        """
-        Converts creature network output to creature actions.
-        :param decisions: All decisions creature made towards all other objects in its line of sight.
-        """
-
-        # Avg out everything the creature wants to do, using main__a weighted average against the urgency of each
-        # decision.
-        move_x, move_y, total = 0, 0, 0
-        best_mate, biggest_urge = None, -1
-        for (creature, creature_info), decision in decisions:
-            left, right, up, down, urgency, mate = decision
-            print(decision)
-            total += 1
-            if mate > MATING_URGE_THRESHOLD:
-                if urgency > biggest_urge:
-                    best_mate = creature
-                    biggest_urge = urgency
-
-            # Movement.
-            if right > left:
-                move_x += right * urgency
-            elif right < left:
-                move_x += -left * urgency
-            if up > down:
-                move_y += up * urgency
-            elif up < down:
-                move_y += -down * urgency
-
-        # Sometimes the creature can't 'see' anything, so total would be 0.
-        if total:
-            move_x = move_x * SPEED_SCALING / total
-            move_y = move_y * SPEED_SCALING / total
-
-        actions = CreatureActions(move_x, move_y, best_mate)
-        return actions
 
     def info_to_vec(self, creature_info: Location, other, other_info: Location) -> CreatureNetworkInput:
         """
@@ -455,10 +396,10 @@ class Simulation:
         """
 
         # Choose parents.
-        # parent_a, parent_b = self.get_parents()
+        parent_a, parent_b = self.get_parents()
 
-        # Birth new child.
-        # self.add_child(*self.new_birth((parent_a, parent_b)))
+        # Birth new child, to replace dead creature.
+        self.add_child(*self.new_birth((parent_a, parent_b)))
 
         # Kill creature
         del self.population[creature]
@@ -542,13 +483,16 @@ class Simulation:
 
         # Check genetic distance from all species representatives, if it is smaller than the threshold catalogue the,
         # creature into that species. If no matching species was found then make a new one with creature as the rep.
-        self.species = dict()
         if new_creature is None:
+
             # Find all creatures not catalogued into a species.
             all_creatures = flatten(list(self.species.values()))
             uncatalogued_creatures = [creature for creature in self.population if creature not in all_creatures]
         else:
+
+            # Can save time if new creature is specified
             uncatalogued_creatures = [new_creature]
+
         while uncatalogued_creatures:
             creature = choice(uncatalogued_creatures)
             self.catalogue_creature(creature)
@@ -567,7 +511,7 @@ class Simulation:
         if int(creature.distance_travelled) % 30 == 0:
             creature.age -= 5
         if creature.age >= MAX_AGE:
-            self.creature_death(creature)
+            self.dead_creatures.append(creature)
 
     def get_parents(self) -> Tuple[Creature, Creature]:
         """
@@ -596,30 +540,6 @@ class Simulation:
         parent_a = choice(self.species[a_species])
         parent_b = choice(ignore(self.species[b_species], parent_a))
         return parent_a, parent_b
-
-    @staticmethod
-    def new_color():
-        """
-        Generates a new, unused color for a species.
-        """
-        known_colors = dict()
-
-        # First colors.
-        new_p, new_s = choice(list(CREATURE_COLORS.values())), choice(list(CREATURE_COLORS.values()))
-        known_colors[new_p] = [new_s]
-        done_colors = []
-        yield new_p, new_s
-        while True:
-            new_p = choice(ignore(list(CREATURE_COLORS.values()), done_colors))
-            if new_p in known_colors:
-                if len(known_colors[new_p]) == len(CREATURE_COLORS) - 2:
-                    done_colors.append(new_p)
-                new_s = choice(ignore(list(CREATURE_COLORS.values()), known_colors[new_p]))
-                known_colors[new_p].append(new_s)
-            else:
-                known_colors[new_p] = [new_s]
-
-            yield new_p, new_s
 
     def new_generation(self) -> Dict[Creature, Location]:
         """
@@ -703,6 +623,109 @@ class Simulation:
         food.amount -= 1
         if food.amount <= 0:
             self.new_food(1, remove=food)
+
+    def kill_creatures(self):
+        """
+        Kill all creatures in dead creatures array.
+        """
+
+        # Make sure there are no duplicates in dead creatures.
+        self.dead_creatures = set(self.dead_creatures)
+        for creature in self.dead_creatures:
+            self.creature_death(creature)
+
+        # Reset dead creatures.
+        self.dead_creatures = []
+
+    @staticmethod
+    def base_dna() -> Tuple[Dna, List[ConnectionMutation]]:
+        """
+        Generate base Dna to start creatures from, connect nodes with connection mutations.
+        """
+
+        # Generate base Dna to start creatures from.
+        base_nodes = {}
+        for num in range(1, CREATURE_INPUTS + CREATURE_OUTPUTS + 1):
+            base_nodes[num] = InputNode(num) if num < CREATURE_INPUTS + 1 else OutputNode(num, BIAS_RANGE)
+
+        # Connect nodes with connection mutations.
+        base_dna = Dna(CREATURE_INPUTS, CREATURE_OUTPUTS, nodes=base_nodes)
+        mutations = []
+
+        # Connect nodes by NEAT PARAMETER settings.
+        if BASE_DNA == 'CONNECTED':
+            for src_number in range(CREATURE_INPUTS):
+                for dst_number in range(CREATURE_INPUTS, CREATURE_INPUTS + CREATURE_OUTPUTS):
+
+                    # Generate connection mutation between each Input node to every Output node.
+                    mutation = ConnectionMutation(len(mutations) + 1, src_number + 1, dst_number + 1)
+                    mutations.append(mutation)
+            base_dna.update(mutations)
+        return base_dna, mutations
+
+    @staticmethod
+    def new_color():
+        """
+        Generates a new, unused color for a species.
+        """
+        known_colors = dict()
+
+        # First colors.
+        new_p, new_s = choice(list(CREATURE_COLORS.values())), choice(list(CREATURE_COLORS.values()))
+        known_colors[new_p] = [new_s]
+        done_colors = []
+        yield new_p, new_s
+        while True:
+            new_p = choice(ignore(list(CREATURE_COLORS.values()), done_colors))
+            if new_p in known_colors:
+                if len(known_colors[new_p]) == len(CREATURE_COLORS) - 2:
+                    done_colors.append(new_p)
+                new_s = choice(ignore(list(CREATURE_COLORS.values()), known_colors[new_p]))
+                known_colors[new_p].append(new_s)
+            else:
+                known_colors[new_p] = [new_s]
+
+            yield new_p, new_s
+
+    @staticmethod
+    def interpret_decisions(decisions: List[Tuple[Tuple[Creature, Location], CreatureNetworkOutput]]) \
+            -> CreatureActions:
+        """
+        Converts creature network output to creature actions.
+        :param decisions: All decisions creature made towards all other objects in its line of sight.
+        """
+
+        # Avg out everything the creature wants to do, using main__a weighted average against the urgency of each
+        # decision.
+        move_x, move_y, total = 0, 0, 0
+        best_mate, biggest_urge = None, -1
+        for (creature, creature_info), decision in decisions:
+            left, right, up, down, urgency, mate = decision
+            total += 1
+
+            # Mating decision.
+            if mate > MATING_URGE_THRESHOLD:
+                if urgency > biggest_urge:
+                    best_mate = creature
+                    biggest_urge = urgency
+
+            # Movement.
+            if right > left:
+                move_x += right * urgency
+            elif right < left:
+                move_x += -left * urgency
+            if up > down:
+                move_y += up * urgency
+            elif up < down:
+                move_y += -down * urgency
+
+        # Sometimes the creature can't 'see' anything, so total would be 0.
+        if total:
+            move_x = move_x * SPEED_SCALING / total
+            move_y = move_y * SPEED_SCALING / total
+
+        actions = CreatureActions(move_x, move_y, best_mate)
+        return actions
 
 
 if __name__ == '__main__':
